@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import GalleryCard from '../../components/GalleryCard.astro';
+import { url } from '../../site';
 
 const galleries = (await getCollection('galleries')).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
@@ -9,20 +10,73 @@ const galleries = (await getCollection('galleries')).sort(
 ---
 
 <BaseLayout title="Work" description="All photography galleries.">
-  <section class="container page">
-    <p class="eyebrow">Galleries</p>
-    <h1>Work</h1>
-    <div class="cards">
-      {galleries.map((gallery) => (
-        <GalleryCard gallery={gallery} />
-      ))}
-    </div>
-  </section>
+  <div class="container page">
+    {/* Every gallery by name: a column on the left on wide screens, a row above on phones. */}
+    <nav class="menu" aria-label="Galleries">
+      <p class="eyebrow">Galleries</p>
+      <ul>
+        {
+          galleries.map((gallery) => (
+            <li>
+              <a href={url(`/work/${gallery.id}/`)}>{gallery.data.title}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <section class="content">
+      <h1>Work</h1>
+      <div class="cards">
+        {galleries.map((gallery) => <GalleryCard gallery={gallery} />)}
+      </div>
+    </section>
+  </div>
 </BaseLayout>
 
 <style>
   .page {
+    display: grid;
+    gap: var(--space-5);
     padding-top: var(--space-7);
+  }
+
+  @media (min-width: 900px) {
+    .page {
+      grid-template-columns: 13rem 1fr;
+      gap: var(--space-6);
+      align-items: start;
+    }
+
+    /* Stays in view while the cards scroll. */
+    .menu {
+      position: sticky;
+      top: var(--space-7);
+    }
+
+    .menu ul {
+      flex-direction: column;
+    }
+  }
+
+  .menu ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin-top: var(--space-3);
+    padding: 0;
+    list-style: none;
+  }
+
+  .menu a {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    color: var(--color-text-muted);
+    transition: color var(--duration-fast) ease;
+  }
+
+  .menu a:hover,
+  .menu a:focus-visible {
+    color: var(--color-text);
   }
 
   h1 {
