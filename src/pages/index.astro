@@ -5,11 +5,43 @@ import { SITE } from '../site';
 ---
 
 <BaseLayout>
-  <PhotoRing>
+  <PhotoRing next="about">
     {/* Shown above the ring: edit freely. */}
     <h1 class="name">{SITE.name}</h1>
     <p class="info">{SITE.tagline}</p>
   </PhotoRing>
+
+  {/* Below the ring: reached by scrolling past it, or with the arrow on the ring's screen. */}
+  <section id="about" class="about container" aria-labelledby="about-title">
+    <div class="background">
+      <h2 id="about-title" class="eyebrow">About</h2>
+      {/* Placeholder: replace with your own background. */}
+      <p class="lead">
+        A few lines about you: where you grew up, how you came to photography, what you like to
+        photograph and where you're based now.
+      </p>
+      <p>
+        A second paragraph for anything else worth knowing: the cameras and film you use, places
+        you return to, exhibitions or publications.
+      </p>
+    </div>
+    <div class="contact">
+      <h2 class="eyebrow">Contact</h2>
+      <p>For commissions, prints or just to say hello:</p>
+      <ul>
+        <li><a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>
+        {
+          SITE.social.map((link) => (
+            <li>
+              <a href={link.href} rel="me noopener" target="_blank">
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
 </BaseLayout>
 
 <style>
@@ -23,5 +55,70 @@ import { SITE } from '../site';
     letter-spacing: var(--tracking-wide);
     text-transform: uppercase;
     color: var(--color-text-muted);
+  }
+
+  /* A full screen of its own, so the page's scroll snapping can stop on it. */
+  .about {
+    display: grid;
+    align-content: center;
+    gap: var(--space-6) var(--space-7);
+    min-height: 100dvh;
+    padding-block: var(--space-7) var(--space-6);
+    scroll-snap-align: start;
+  }
+
+  @media (min-width: 768px) {
+    .about {
+      grid-template-columns: 3fr 2fr;
+      align-items: start;
+    }
+  }
+
+  .about h2 {
+    margin-bottom: var(--space-4);
+    font-family: inherit;
+  }
+
+  .background {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 60ch;
+    color: var(--color-text-muted);
+  }
+
+  .background h2 {
+    margin-bottom: var(--space-1);
+  }
+
+  .lead {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    line-height: 1.3;
+    color: var(--color-text);
+  }
+
+  .contact p {
+    color: var(--color-text-muted);
+  }
+
+  .contact ul {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+  }
+
+  .contact a {
+    text-decoration: underline;
+    text-decoration-color: var(--color-border);
+    text-underline-offset: 0.25em;
+    transition: text-decoration-color var(--duration-fast) ease;
+  }
+
+  .contact a:hover {
+    text-decoration-color: currentColor;
   }
 </style>

@@ -3,6 +3,12 @@ import { Image } from 'astro:assets';
 import { getEntry } from 'astro:content';
 import { ENLARGE, ringPose } from '../lib/ring';
 
+interface Props {
+  /* Id of the section after the ring: shows a hand-drawn arrow that scrolls down to it. */
+  next?: string;
+}
+
+const { next } = Astro.props;
 const { photos } = (await getEntry('home', 'photos'))!.data;
 const step = (2 * Math.PI) / photos.length;
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -28,6 +34,24 @@ const shapes = photos.map((_, i) => {
   <div class="stage">
     {/* Whatever the page passes in (name, info…), held above the ring while it turns. */}
     <div class="intro"><slot /></div>
+    {
+      next && (
+        <a class="down" href={`#${next}`} data-ring-down aria-label="About and contact">
+          {/* Drawn freehand: a slightly wavering shaft and an uneven head. */}
+          <svg viewBox="0 0 40 84" aria-hidden="true">
+            <path
+              pathLength="1"
+              d="M20.5 4c-2.2 9-0.6 17.5 0.8 26.5 1.3 8.8-1.6 17.3-1.2 26.1 0.3 6.6 0.9 12.4 0.4 19"
+            />
+            <path
+              pathLength="1"
+              style="--delay: 0.55s"
+              d="M8.5 61.5c3.8 3.3 7.6 7.9 11.9 14.4 2.6-5.2 6.4-10.4 11.6-15.3"
+            />
+          </svg>
+        </a>
+      )
+    }
     {/* Shadows sit in their own layer under every photo: the ground is never in front of them. */}
     <div class="ground" aria-hidden="true">
       {photos.map((_, i) => {
@@ -407,6 +431,15 @@ const shapes = photos.map((_, i) => {
       turnTo(i, easing);
     });
 
+    // The arrow scrolls smoothly past the ring to the next section (the ring spins along).
+    section.querySelector('[data-ring-down]')?.addEventListener('click', (event) => {
+      const id = (event.currentTarget as HTMLAnchorElement).hash.slice(1);
+      const next = document.getElementById(id);
+      if (!next) return;
+      event.preventDefault();
+      next.scrollIntoView({ behavior: easing ? 'smooth' : 'instant' });
+    });
+
     addEventListener('scroll', schedule, { passive: true });
     addEventListener('resize', schedule);
     // Page transitions keep the document alive, so drop listeners before leaving the page.
@@ -508,6 +541,68 @@ const shapes = photos.map((_, i) => {
   .ground {
     position: absolute;
     inset: 0;
+  }
+
+  /* Bottom-left corner: the ring tilts up on the left, so this corner stays clear. */
+  .down {
+    position: absolute;
+    bottom: var(--space-5);
+    left: var(--gutter);
+    z-index: 200;
+    padding: var(--space-2);
+    color: var(--color-text-muted);
+    transition: color var(--duration-fast) ease;
+  }
+
+  .down:hover,
+  .down:focus-visible {
+    color: var(--color-text);
+  }
+
+  .down svg {
+    display: block;
+    width: 2.75rem;
+    height: auto;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Draws itself in once, shaft then head, then bobs gently as an invitation to press. */
+    .down path {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: draw 0.7s var(--ease-out) forwards;
+      animation-delay: calc(0.6s + var(--delay, 0s));
+    }
+
+    .down svg {
+      animation: bob 2.4s var(--ease-in-out) 1.8s infinite;
+    }
+
+    .down:hover svg {
+      animation-play-state: paused;
+    }
+  }
+
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes bob {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 0.4rem;
+    }
   }
 
   /* Centered below the header, above the ring's photos. */
