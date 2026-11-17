@@ -2,13 +2,19 @@
 import { NAV, SITE, url } from '../site';
 
 const current = Astro.url.pathname;
+// The home page shows the name large above the ring, so the header leaves it out there.
+const isHome = current.replace(/\/$/, '') === url('/').replace(/\/$/, '');
 ---
 
 <header class="header">
   <div class="container inner">
-    <a class="brand" href={url('/')}>
-      {SITE.name}
-    </a>
+    {
+      !isHome && (
+        <a class="brand" href={url('/')}>
+          {SITE.name}
+        </a>
+      )
+    }
     <nav aria-label="Main">
       <ul>
         {NAV.map((item) => {
@@ -23,8 +29,37 @@ const current = Astro.url.pathname;
         })}
       </ul>
     </nav>
+    <button class="theme" type="button" aria-label="Dark mode" aria-pressed="false" data-theme-toggle>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="8"></circle>
+        <path d="M12 4a8 8 0 0 1 0 16Z"></path>
+      </svg>
+    </button>
   </div>
 </header>
+
+<script>
+  // Switches between light and dark, starting from whatever is showing (the device's setting
+  // until a choice is made), and remembers the choice for later visits.
+  const isDark = () => {
+    const theme = document.documentElement.dataset.theme;
+    return theme ? theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  };
+  const syncButton = () => {
+    document.querySelector('[data-theme-toggle]')?.setAttribute('aria-pressed', String(isDark()));
+  };
+
+  document.addEventListener('click', (event) => {
+    if (!(event.target as Element).closest('[data-theme-toggle]')) return;
+    const theme = isDark() ? 'light' : 'dark';
+    document.documentElement.dataset.theme = theme;
+    try {
+      localStorage.setItem('theme', theme);
+    } catch {}
+    syncButton();
+  });
+  document.addEventListener('astro:page-load', syncButton);
+</script>
 
 <style>
   .header {
@@ -32,7 +67,11 @@ const current = Astro.url.pathname;
     inset: 0 0 auto;
     z-index: 10;
     padding-block: var(--space-4);
-    background: linear-gradient(to bottom, rgb(11 11 12 / 0.75), transparent);
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-bg) 85%, transparent),
+      transparent
+    );
   }
 
   .inner {
@@ -65,5 +104,38 @@ const current = Astro.url.pathname;
   nav a:hover,
   nav a[aria-current='page'] {
     color: var(--color-text);
+  }
+
+  nav {
+    margin-left: auto;
+  }
+
+  /* A half-filled circle: light and dark. */
+  .theme {
+    display: grid;
+    place-items: center;
+    padding: var(--space-1);
+    border: 0;
+    background: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .theme:hover {
+    color: var(--color-text);
+  }
+
+  .theme svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+
+  .theme path {
+    fill: currentColor;
+    stroke: none;
   }
 </style>

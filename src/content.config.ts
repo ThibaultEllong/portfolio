@@ -16,4 +16,22 @@ const galleries = defineCollection({
     }),
 });
 
-export const collections = { galleries };
+const home = defineCollection({
+  loader: glob({ pattern: 'photos.yaml', base: './src/assets/home' }),
+  schema: ({ image }) =>
+    z.object({
+      photos: z
+        .array(
+          z.object({
+            src: image(),
+            title: z.string(),
+            alt: z.string(),
+            location: z.string().optional(),
+            year: z.number().optional(),
+          }),
+        )
+        .min(1),
+    }),
+});
+
+export const collections = { galleries, home };

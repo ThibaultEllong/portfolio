@@ -35,6 +35,22 @@ const ogImage = image ? await getImage({ src: image, width: 1200, format: 'jpg' 
     <meta property="og:url" content={canonical} />
     {ogImage && <meta property="og:image" content={new URL(ogImage.src, Astro.site)} />}
     <meta name="twitter:card" content="summary_large_image" />
+    <script is:inline>
+      // Theme chosen with the header toggle, applied before the first paint so the page never
+      // flashes the other theme. Page transitions replace <html>'s attributes, so re-apply then.
+      (() => {
+        const applyTheme = (root) => {
+          try {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'light' || theme === 'dark') root.dataset.theme = theme;
+          } catch {}
+        };
+        applyTheme(document.documentElement);
+        document.addEventListener('astro:before-swap', (event) =>
+          applyTheme(event.newDocument.documentElement),
+        );
+      })();
+    </script>
     <ClientRouter />
   </head>
   <body>

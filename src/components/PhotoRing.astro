@@ -1,0 +1,785 @@
+---
+import { Image } from 'astro:assets';
+import { getEntry } from 'astro:content';
+import { ENLARGE, ringPose } from '../lib/ring';
+
+const { photos } = (await getEntry('home', 'photos'))!.data;
+const step = (2 * Math.PI) / photos.length;
+const pad = (n: number) => String(n).padStart(2, '0');
+// Each photo's shape, and the next photo's: the photo leaving the front steps aside by
+// just enough to clear the next one (see --clearance in the styles).
+const shapes = photos.map((_, i) => {
+  const ratio = (p: (typeof photos)[number]) => p.src.width / p.src.height;
+  return `--aspect: ${ratio(photos[i])}; --next-aspect: ${ratio(photos[(i + 1) % photos.length])}`;
+});
+---
+
+<section
+  class="ring-scroll"
+  data-ring
+  style={`--count: ${photos.length}; --enlarge: ${ENLARGE}; --swap-scale: ${ringPose(step / 2).scale}`}
+>
+  {
+    // One snap point per photo, plus one after a full turn.
+    Array.from({ length: photos.length + 1 }, (_, k) => (
+      <div class="snap" style={`--k: ${k}`} />
+    ))
+  }
+  <div class="stage">
+    {/* Whatever the page passes in (name, info…), held above the ring while it turns. */}
+    <div class="intro"><slot /></div>
+    {/* Shadows sit in their own layer under every photo: the ground is never in front of them. */}
+    <div class="ground" aria-hidden="true">
+      {photos.map((_, i) => {
+        const { x, y, scale, depth } = ringPose(i * step);
+        return (
+          <div
+            class="shadow"
+            data-ring-shadow
+            style={`--x: ${x}; --y: ${y}; --scale: ${scale}; --depth: ${depth}; ${shapes[i]}`}
+          />
+        );
+      })}
+    </div>
+    <ul class="ring">
+      {photos.map((data, i) => {
+        const { x, y, scale, depth, z } = ringPose(i * step);
+        const meta = [data.location, data.year].filter(Boolean).join(', ');
+        return (
+          <li
+            class="item"
+            data-ring-item
+            style={`--x: ${x}; --y: ${y}; --scale: ${scale}; --depth: ${depth}; ${shapes[i]}; z-index: ${z}`}
+          >
+            <figure>
+              <div class="fog">
+                <Image
+                  src={data.src}
+                  alt={data.alt}
+                  widths={[480, 800, 1200, 1600, 2400]}
+                  sizes="min(80vw, 48rem)"
+                  loading="eager"
+                />
+              </div>
+              <figcaption class="caption">
+                <span class="count">
+                  {pad(i + 1)} / {pad(photos.length)}
+                </span>
+                <span class="title">{data.title}</span>
+                {meta && <span class="meta">{meta}</span>}
+              </figcaption>
+            </figure>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+  {/* Fullscreen view of the front photo; the script fills it in from the clicked photo. */}
+  <dialog class="viewer" data-ring-viewer aria-label="Photo" tabindex="-1">
+    <div class="veil"></div>
+    <figure>
+      <img alt="" />
+      <figcaption class="viewer-caption"></figcaption>
+    </figure>
+    <button class="close" type="button">Close</button>
+    <button class="nav prev" type="button" aria-label="Previous photo" data-browse="-1">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"></path></svg>
+    </button>
+    <button class="nav next" type="button" aria-label="Next photo" data-browse="1">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 8 8-8 8"></path></svg>
+    </button>
+  </dialog>
+</section>
+
+<script is:inline>
+  // Shuffle the ring into a new random order on every visit. It runs right after the ring's
+  // markup, before the page is first drawn, so the original order never shows: each photo takes
+  // over the position, number and neighbor of the slot it lands in.
+  (() => {
+    const section = document.querySelector('[data-ring]');
+    const ring = section.querySelector('.ring');
+    const ground = section.querySelector('.ground');
+    const items = [...ring.children];
+    const shadows = [...ground.children];
+    const n = items.length;
+    const order = items.map((_, i) => i);
+    for (let i = n - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    // The server rendered slot k's position on the k-th photo: read the slots before moving.
+    const poseProps = ['--x', '--y', '--scale', '--depth'];
+    const slots = items.map((item) => ({
+      pose: poseProps.map((p) => item.style.getPropertyValue(p)),
+      z: item.style.zIndex,
+    }));
+    const pad = (k) => String(k).padStart(2, '0');
+    order.forEach((photo, k) => {
+      const next = items[order[(k + 1) % n]].style.getPropertyValue('--aspect');
+      for (const el of [items[photo], shadows[photo]]) {
+        poseProps.forEach((p, m) => el.style.setProperty(p, slots[k].pose[m]));
+        el.style.setProperty('--next-aspect', next);
+      }
+      items[photo].style.zIndex = slots[k].z;
+      items[photo].querySelector('.count').textContent = `${pad(k + 1)} / ${pad(n)}`;
+    });
+    ring.append(...order.map((photo) => items[photo]));
+    ground.append(...order.map((photo) => shadows[photo]));
+  })();
+</script>
+
+<script>
+  import { ringPose } from '../lib/ring';
+
+  function setupRing() {
+    const section = document.querySelector<HTMLElement>('[data-ring]');
+    if (!section) return;
+    const items = [...section.querySelectorAll<HTMLElement>('[data-ring-item]')];
+    const shadows = [...section.querySelectorAll<HTMLElement>('[data-ring-shadow]')];
+    const step = (2 * Math.PI) / items.length;
+    // The ring eases toward the scroll position instead of following it exactly,
+    // which smooths out snap jumps and wheel steps. Larger = slower, smoother.
+    const easing = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 160;
+    let target = 0;
+    let turn = 0;
+    let last = 0;
+    let frame = 0;
+    let active = -1;
+    // A turn started by a click: the ring animates on its own along the shortest way, then the
+    // scroll position is quietly moved to match. The shuffle is off during it.
+    let jump: { from: number; to: number; start: number; duration: number } | undefined;
+
+    const scrollable = () => section.offsetHeight - innerHeight;
+    const readTarget = () => {
+      const progress = Math.min(Math.max(-section.getBoundingClientRect().top / scrollable(), 0), 1);
+      target = progress * 2 * Math.PI;
+    };
+
+    const render = () => {
+      items.forEach((item, i) => {
+        const angle = i * step - turn;
+        const { x, y, scale, depth, z } = ringPose(angle);
+        // Shuffle: over the step it takes to leave the front for the left, the photo swings
+        // aside and back (0 → 1 → 0). It is furthest out halfway, exactly when the next photo
+        // passes in front of it, so the two never overlap as they swap.
+        const offFront = -(angle - 2 * Math.PI * Math.round(angle / (2 * Math.PI))) / step;
+        const shuffle = !jump && offFront > 0 && offFront < 1 ? Math.sin(Math.PI * offFront) : 0;
+        for (const el of [item, shadows[i]]) {
+          el.style.setProperty('--shuffle', String(shuffle));
+          el.style.setProperty('--x', String(x));
+          el.style.setProperty('--y', String(y));
+          el.style.setProperty('--scale', String(scale));
+          el.style.setProperty('--depth', String(depth));
+        }
+        item.style.zIndex = String(z);
+      });
+    };
+
+    // The front photo is enlarged (via the is-active class) only once the scroll rests on a snap
+    // point and the ring has slid nearly into place; any new scroll shrinks it again.
+    const updateActive = () => {
+      const k = target / step;
+      // The second check sets how close the ring must be to its place before the growth starts:
+      // raise it to start growing earlier, overlapping more of the slide.
+      const settled = Math.abs(k - Math.round(k)) < 0.02 && Math.abs(target - turn) < step * 0.15;
+      // A click turn can take the ring below 0 or past a full turn, hence the wrap-around.
+      const n = items.length;
+      const next = settled ? ((Math.round(k) % n) + n) % n : -1;
+      if (next === active) return;
+      // The shadow grows along with its photo.
+      for (const el of [items[active], shadows[active]]) el?.classList.remove('is-active');
+      for (const el of [items[next], shadows[next]]) el?.classList.add('is-active');
+      active = next;
+      // Lifts the resting fog while the ring turns (see --haze).
+      section.toggleAttribute('data-moving', next < 0);
+    };
+
+    // Fullscreen viewer. The photo appears to fly from the ring to fullscreen and back: the
+    // viewer's image starts drawn over the ring photo's spot and animates to its own place.
+    const viewer = section.querySelector<HTMLDialogElement>('[data-ring-viewer]')!;
+    const veil = viewer.querySelector<HTMLElement>('.veil')!;
+    const big = viewer.querySelector('img')!;
+    const caption = viewer.querySelector('figcaption')!;
+    const ease = getComputedStyle(section).getPropertyValue('--ease-out').trim();
+    let source: HTMLImageElement | undefined;
+    let shown = -1;
+    let loading = 0;
+    let closing = false;
+
+    const placedAt = (rect: DOMRect) => {
+      const to = big.getBoundingClientRect();
+      const dx = rect.x + rect.width / 2 - (to.x + to.width / 2);
+      const dy = rect.y + rect.height / 2 - (to.y + to.height / 2);
+      return `translate(${dx}px, ${dy}px) scale(${rect.width / to.width})`;
+    };
+
+    // Puts photo i in the viewer. It starts from the image already loaded for the ring, so it
+    // shows at once; the sharper fullscreen size loads afterwards and replaces it when ready.
+    // Resolves false if another photo was asked for in the meantime (quick arrow presses).
+    const fill = async (i: number) => {
+      const ticket = ++loading;
+      const ringImage = items[i].querySelector('img')!;
+      const preview = new Image();
+      preview.src = ringImage.currentSrc;
+      await preview.decode().catch(() => {});
+      if (ticket !== loading) return false;
+      big.removeAttribute('srcset');
+      big.src = ringImage.currentSrc;
+      big.alt = ringImage.alt;
+      big.style.setProperty('--aspect', items[i].style.getPropertyValue('--aspect'));
+      caption.innerHTML = items[i].querySelector('figcaption')!.innerHTML;
+      big.sizes = '100vw';
+      big.srcset = ringImage.srcset;
+      // The ring photo stays hidden while it is shown fullscreen, so the closing flight
+      // lands on an empty spot.
+      if (source) source.style.visibility = '';
+      source = ringImage;
+      source.style.visibility = 'hidden';
+      shown = i;
+      return true;
+    };
+
+    const open = async (i: number) => {
+      const from = items[i].querySelector('img')!.getBoundingClientRect();
+      if (!(await fill(i))) return;
+      viewer.showModal();
+      // Focus the viewer itself rather than its Close button, which would show a focus ring.
+      viewer.focus();
+      if (easing) {
+        const timing = { duration: 600, easing: ease };
+        big.animate([{ transform: placedAt(from) }, { transform: 'none' }], timing);
+        veil.animate([{ opacity: 0 }, { opacity: 1 }], timing);
+        caption.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: 450, fill: 'backwards' });
+      }
+    };
+
+    // Arrows: show the previous or next photo, sliding in from that side. The ring turns along
+    // behind the viewer (unseen), so closing flies the photo back to the front of the ring.
+    const browse = async (direction: number) => {
+      if (closing) return;
+      const n = items.length;
+      const i = (shown + direction + n) % n;
+      turnTo(i, 0);
+      if (!(await fill(i)) || !easing) return;
+      const timing = { duration: 450, easing: ease };
+      big.animate(
+        [{ opacity: 0, transform: `translateX(${direction * 3}rem)` }, { opacity: 1, transform: 'none' }],
+        timing,
+      );
+      caption.animate([{ opacity: 0 }, { opacity: 1 }], timing);
+    };
+
+    const close = async () => {
+      if (!viewer.open || closing) return;
+      closing = true;
+      if (easing && source) {
+        const timing = { duration: 450, easing: ease, fill: 'forwards' } as const;
+        caption.animate([{ opacity: 0 }], { duration: 150, fill: 'forwards' });
+        veil.animate([{ opacity: 0 }], timing);
+        await big.animate([{ transform: placedAt(source.getBoundingClientRect()) }], timing).finished;
+      }
+      viewer.close();
+      for (const el of [big, veil, caption]) el.getAnimations().forEach((a) => a.cancel());
+      if (source) source.style.visibility = '';
+      source = undefined;
+      closing = false;
+    };
+
+    // Set by a swipe, so the tap-like click some browsers send after it doesn't close the viewer.
+    let swiped = false;
+    viewer.addEventListener('click', (event) => {
+      if (swiped) {
+        swiped = false;
+        return;
+      }
+      const arrow = (event.target as Element).closest<HTMLElement>('[data-browse]');
+      if (arrow) browse(Number(arrow.dataset.browse));
+      else close();
+    });
+    viewer.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft') browse(-1);
+      if (event.key === 'ArrowRight') browse(1);
+    });
+
+    // Swipe (touch and pen): the photo follows the finger sideways; let go past the threshold
+    // to browse (swipe left for the next photo), or short of it to let the photo spring back.
+    let swipe: { id: number; x: number; y: number; dx: number } | undefined;
+    const SWIPE_THRESHOLD = 50; // px
+    viewer.addEventListener('pointerdown', (event) => {
+      swiped = false;
+      if (event.pointerType === 'mouse' || swipe || closing) return;
+      swipe = { id: event.pointerId, x: event.clientX, y: event.clientY, dx: 0 };
+    });
+    viewer.addEventListener('pointermove', (event) => {
+      if (event.pointerId !== swipe?.id) return;
+      swipe.dx = event.clientX - swipe.x;
+      big.style.translate = `${swipe.dx}px 0`;
+    });
+    const endSwipe = (event: PointerEvent) => {
+      if (event.pointerId !== swipe?.id) return;
+      const { dx } = swipe;
+      const sideways = Math.abs(dx) > Math.abs(event.clientY - swipe.y);
+      swipe = undefined;
+      big.style.translate = '';
+      // Any real drag, even one too short to browse, shouldn't count as a tap that closes.
+      if (Math.abs(dx) > 10) swiped = true;
+      if (event.type === 'pointerup' && sideways && Math.abs(dx) > SWIPE_THRESHOLD) {
+        browse(dx < 0 ? 1 : -1);
+      } else if (dx && easing) {
+        big.animate([{ translate: `${dx}px 0` }, { translate: '0 0' }], { duration: 250, easing: ease });
+      }
+    };
+    viewer.addEventListener('pointerup', endSwipe);
+    viewer.addEventListener('pointercancel', endSwipe);
+    // Escape: play the closing animation instead of closing at once.
+    viewer.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      close();
+    });
+
+    const easeInOut = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (2 - 2 * t) ** 3 / 2);
+
+    // End of a click turn: move the scroll to the arrived photo's snap point, without animation,
+    // so scrolling carries on from there. The first photo has two snap points (start and end
+    // of the scroll): keep the one nearer to where the page was.
+    const land = () => {
+      const n = items.length;
+      let s = ((Math.round(jump!.to / step) % n) + n) % n;
+      if (s === 0 && -section.getBoundingClientRect().top > scrollable() / 2) s = n;
+      jump = undefined;
+      turn = target = s * step;
+      const sectionTop = section.getBoundingClientRect().top + scrollY;
+      scrollTo({ top: sectionTop + (s / n) * scrollable(), behavior: 'instant' });
+    };
+
+    const tick = (now: number) => {
+      if (jump) {
+        const t = jump.duration ? Math.min(Math.max((now - jump.start) / jump.duration, 0), 1) : 1;
+        turn = jump.from + (jump.to - jump.from) * easeInOut(t);
+        if (t === 1) land();
+      } else {
+        const elapsed = last ? now - last : 16;
+        turn += (target - turn) * (1 - Math.exp(-elapsed / easing));
+        if (Math.abs(target - turn) < 0.0005) turn = target;
+      }
+      last = now;
+      render();
+      updateActive();
+      if (!jump && turn === target) {
+        frame = 0;
+        last = 0;
+      } else {
+        frame = requestAnimationFrame(tick);
+      }
+    };
+
+    // Turns the ring the shortest way to photo i, animated unless `animate` is 0.
+    function turnTo(i: number, animate: number) {
+      const n = items.length;
+      // Steps from the current position to the photo, between -n/2 and n/2 (n/2 = clockwise).
+      let steps = (((i - turn / step) % n) + n) % n;
+      if (steps > n / 2 + 1e-6) steps -= n;
+      // Longer turns take longer, within reason.
+      const duration = animate ? Math.min(350 + 70 * Math.abs(steps), 1100) : 0;
+      jump = { from: turn, to: turn + steps * step, start: performance.now(), duration };
+      target = jump.to;
+      frame ||= requestAnimationFrame(tick);
+    }
+
+    const schedule = () => {
+      // During a click turn the ring ignores the scroll; it is set right on landing.
+      if (jump) return;
+      readTarget();
+      updateActive();
+      frame ||= requestAnimationFrame(tick);
+    };
+
+    // Clicking the front photo opens it fullscreen. Clicking any other photo turns the ring to
+    // it the shortest way: a photo on the right comes in clockwise (as when scrolling down),
+    // one on the left counter-clockwise, and the one straight at the back clockwise.
+    section.addEventListener('click', (event) => {
+      const i = items.indexOf((event.target as Element).closest<HTMLElement>('[data-ring-item]')!);
+      if (i < 0) return;
+      if (i === active) {
+        open(i);
+        return;
+      }
+      turnTo(i, easing);
+    });
+
+    addEventListener('scroll', schedule, { passive: true });
+    addEventListener('resize', schedule);
+    // Page transitions keep the document alive, so drop listeners before leaving the page.
+    document.addEventListener(
+      'astro:before-swap',
+      () => {
+        removeEventListener('scroll', schedule);
+        removeEventListener('resize', schedule);
+        cancelAnimationFrame(frame);
+      },
+      { once: true },
+    );
+    readTarget();
+    turn = target;
+    render();
+    // Enlarge after the first paint so the growth animation also plays on page load.
+    requestAnimationFrame(() => requestAnimationFrame(updateActive));
+  }
+
+  document.addEventListener('astro:page-load', setupRing);
+</script>
+
+<style>
+  :global(html:has(.ring-scroll)) {
+    scroll-snap-type: y mandatory;
+  }
+
+  /* With mandatory snapping, the page end needs a snap point too, or the footer is unreachable. */
+  :global(html:has(.ring-scroll) footer) {
+    scroll-snap-align: end;
+  }
+
+  /* Each photo gets half a screen of scrolling. */
+  .ring-scroll {
+    position: relative;
+    height: calc(100dvh + var(--count) * 50dvh);
+  }
+
+  .snap {
+    position: absolute;
+    top: calc(var(--k) / var(--count) * (100% - 100dvh));
+    height: 1px;
+    scroll-snap-align: start;
+  }
+
+  .stage {
+    /* Room kept free at the top of the screen for the header and the intro. */
+    --intro-space: 11.5rem;
+    /* How far below the screen's center the ring sits, leaving room for the intro above it. */
+    --ring-offset: 9dvh;
+    /* Size of the enlarged front photo; every other photo is scaled down from it. On short
+       screens the last term shrinks it so its caption still fits above the screen's bottom. */
+    --photo-height: min(46dvh, 84vw, 64dvh - 9.25rem);
+    --photo-max-width: min(80vw, 48rem);
+    /* Ring radius. The ring's slant lifts the left side, so on short, wide screens the last term
+       narrows it to keep the photos up to three places from the front below --intro-space. */
+    --radius: min(
+      40vw,
+      44rem,
+      (50dvh + var(--ring-offset) - 0.36 * var(--photo-height) - var(--intro-space)) / 0.34
+    );
+    /* Camera height above the ring: lower values flatten it. At 0.24 the back photos
+       peek about an eighth of a photo height above the front one. */
+    --tilt: calc(var(--photo-height) * 0.24);
+    /* Tilt of the whole ring: the left side rises and the right side drops by this angle. */
+    --axis: 25deg;
+    /* The ground: one level line this far below the screen's center, just under the enlarged
+       front photo. Every shadow lies on it, whatever the photo's height on the ring. */
+    --ground: calc(var(--photo-height) * 0.56);
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    overflow: hidden;
+    /* Extra fog on the photos around the front one while the ring rests, setting the front
+       photo apart; it settles in with the front photo's growth. */
+    --haze: 0.15;
+    transition: --haze calc(var(--duration-base) * 1.5) ease;
+  }
+
+  /* While the ring turns, the extra fog lifts quickly so the passing photos read clearly. */
+  [data-moving] .stage {
+    --haze: 0;
+    transition: --haze calc(var(--duration-fast) * 1.5) ease;
+  }
+
+  @property --haze {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+
+  .ring {
+    position: relative;
+    height: 100%;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ground {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Centered below the header, above the ring's photos. */
+  .intro {
+    position: absolute;
+    top: 4.5rem;
+    left: 50%;
+    z-index: 200;
+    translate: -50% 0;
+    width: max-content;
+    max-width: calc(100% - 2 * var(--gutter));
+    text-align: center;
+  }
+
+  /* Registered so it can be animated: the growth factor of the settled front photo. */
+  @property --boost {
+    syntax: '<number>';
+    inherits: false;
+    initial-value: 1;
+  }
+
+  .item,
+  .shadow {
+    --boost: 1;
+    /* Unscaled widths of this photo and of the next one on the ring. */
+    --width: min(var(--photo-height) * var(--aspect), var(--photo-max-width));
+    --next-width: min(var(--photo-height) * var(--next-aspect), var(--photo-max-width));
+    /* How far the photo leaving the front swings left at the peak of its shuffle: just enough
+       for its right edge to clear the next photo's left edge, half a step from the front. */
+    --clearance: max(
+      0px,
+      (var(--width) + var(--next-width)) / 2 * var(--swap-scale) - 2 * var(--radius) *
+        sin(180deg / var(--count)) * cos(var(--axis)) + var(--space-3)
+    );
+    /* Ring position rotated by --axis, offset so the front photo sits at the center of the screen. */
+    --ring-x: calc(
+      var(--x) * var(--radius) * cos(var(--axis)) - (var(--y) - 1) * var(--tilt) *
+        sin(var(--axis)) - var(--shuffle, 0) * var(--clearance)
+    );
+    --ring-y: calc(
+      var(--x) * var(--radius) * sin(var(--axis)) + (var(--y) - 1) * var(--tilt) *
+        cos(var(--axis))
+    );
+    position: absolute;
+    top: calc(50% + var(--ring-offset));
+    left: 50%;
+    translate: -50% -50%;
+    transform: translate(var(--ring-x), var(--ring-y)) scale(calc(var(--scale) * var(--boost)));
+    will-change: transform;
+    cursor: pointer;
+    /* Shrinking back when the ring starts moving again. */
+    transition: --boost calc(var(--duration-fast) * 2) var(--ease-in-out);
+  }
+
+  /* Growing once the ring has settled on this photo. */
+  .is-active {
+    --boost: var(--enlarge);
+    transition: --boost calc(var(--duration-base) * 1.75) var(--ease-out);
+  }
+
+  /* A soft oval as wide as the photo, on the ground line straight below it. */
+  .shadow {
+    transform: translate(var(--ring-x), var(--ground)) scale(calc(var(--scale) * var(--boost)));
+    width: var(--width);
+    height: calc(var(--width) * 0.16);
+    /* Fades quickly with distance: as the shadows all share one line, only the nearest ones
+       should stand out, and the furthest disappear. */
+    opacity: pow(var(--depth), 4);
+  }
+
+  .shadow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      closest-side,
+      var(--color-shadow),
+      var(--color-shadow-soft) 55%,
+      transparent
+    );
+  }
+
+  figure {
+    position: relative;
+  }
+
+  /* Sized from the photo's shape: as tall as --photo-height, unless that would make it wider
+     than --photo-max-width (wide landscapes). */
+  .item img {
+    width: var(--width);
+    /* Each photo is placed from the screen's center, leaving it only half the screen to fit in:
+       lift the site's usual max-width: 100% so wide photos aren't squeezed. */
+    max-width: none;
+    height: auto;
+    aspect-ratio: var(--aspect);
+  }
+
+  /* Distance fog: a layer of background color over each photo, thicker the further back it is.
+     The photo itself stays opaque, so nothing behind it shows through. */
+  .fog {
+    position: relative;
+  }
+
+  .fog::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--color-bg);
+    /* Clear at the front, solid toward the back so the furthest photos vanish into the page.
+       The fog grows steadily with distance, so the photos next to the front stay nearly clear.
+       The factor sets its strength at the sides of the ring: 1.8 × 0.5 = 90%. Above 100% it
+       stays solid, so everything past about 100° from the front is fully hidden.
+       On top of that, --haze adds an even layer to every photo except the one at the front
+       (the min() term is 0 at the very front and 1 from just beside it). */
+    opacity: calc(1.8 * (1 - var(--depth)) + var(--haze) * min(1, (1 - var(--depth)) * 200));
+    pointer-events: none;
+  }
+
+  /* Below the shadow, so it sits at the same height whatever the photo's shape. */
+  .caption {
+    position: absolute;
+    top: calc(50% + var(--ground) + var(--photo-height) * 0.08);
+    left: 50%;
+    translate: -50% 0;
+    display: grid;
+    justify-items: center;
+    gap: var(--space-1);
+    margin-top: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    /* Backed so it stays readable where photos on the lower side pass behind it. */
+    background: var(--color-bg);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity var(--duration-fast) ease;
+    pointer-events: none;
+  }
+
+  /* Fades in once the photo has mostly finished growing. */
+  .is-active .caption {
+    opacity: 1;
+    transition: opacity var(--duration-base) ease var(--duration-base);
+  }
+
+  /* The page behind the viewer must not scroll, or the ring would turn underneath.
+     The gutter keeps the page from shifting sideways when the scrollbar hides. */
+  :global(html:has(.viewer[open])) {
+    overflow: hidden;
+    scrollbar-gutter: stable;
+  }
+
+  .viewer {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: hidden;
+    outline: none;
+    cursor: zoom-out;
+    /* Sideways drags are swipes handled by the script; pinch-zoom is left to the browser. */
+    touch-action: pan-y pinch-zoom;
+  }
+
+  .viewer[open] {
+    display: grid;
+    place-items: center;
+  }
+
+  .viewer::backdrop {
+    background: transparent;
+  }
+
+  /* The page color, faded in behind the photo as it flies to fullscreen. */
+  .veil {
+    position: absolute;
+    inset: 0;
+    background: var(--color-bg);
+  }
+
+  .viewer figure {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-3);
+    margin: 0;
+  }
+
+  /* As large as the window allows, leaving room for the caption. The size comes from the
+     photo's shape, not the file, so it doesn't change when the sharper version loads. */
+  .viewer img {
+    width: min(100vw - 2 * var(--gutter), (100dvh - 2 * var(--space-5) - 5rem) * var(--aspect));
+    height: auto;
+    aspect-ratio: var(--aspect);
+  }
+
+  .viewer-caption {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-1);
+  }
+
+  .close {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--gutter);
+    padding: var(--space-2);
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: var(--text-sm);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  .close:hover,
+  .close:focus-visible {
+    color: var(--color-text);
+  }
+
+  /* Previous / next: at the window's sides, over the photo's edge when space is short (phones),
+     hence the backing disc. */
+  .nav {
+    position: absolute;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-bg) 70%, transparent);
+    color: var(--color-text-muted);
+    translate: 0 -50%;
+    cursor: pointer;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .nav:hover,
+  .nav:focus-visible {
+    color: var(--color-text);
+  }
+
+  .prev {
+    left: var(--gutter);
+  }
+
+  .next {
+    right: var(--gutter);
+  }
+
+  .nav svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.25;
+  }
+
+  .count,
+  .meta {
+    font-size: var(--text-sm);
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-text-muted);
+  }
+
+  .title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+  }
+</style>
