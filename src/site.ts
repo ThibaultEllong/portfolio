@@ -11,5 +11,5 @@ export const NAV = [
   { label: 'About', href: '/about/' },
 ];
 
-// Prefixes internal links with the GitHub Pages base path (e.g. /Portfolio).
+// Prefixes internal links with the GitHub Pages base path (e.g. /portfolio).
 export const url = (path: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}${path}`;

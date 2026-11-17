@@ -6,6 +6,6 @@ import sitemap from '@astrojs/sitemap';
 // so remove `base` in that case. Any other repo name is served at /<repo-name>.
 export default defineConfig({
   site: 'https://thibaultellong.github.io',
-  base: '/Portfolio',
+  base: '/portfolio',
   integrations: [sitemap()],
 });
