@@ -1,0 +1,73 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import GalleryGrid from '../../components/GalleryGrid.astro';
+
+export async function getStaticPaths() {
+  const galleries = await getCollection('galleries');
+  return galleries.map((gallery) => ({ params: { slug: gallery.id }, props: { gallery } }));
+}
+
+const { gallery } = Astro.props;
+const { title, date, description, tags, photos } = gallery.data;
+const [cover] = photos;
+const { Content } = await render(gallery);
+---
+
+<BaseLayout title={title} description={description} image={cover.src}>
+  <section class="hero">
+    <Image
+      class="hero-image"
+      src={cover.src}
+      alt={cover.alt}
+      widths={[800, 1600, 2400]}
+      sizes="100vw"
+      loading="eager"
+      fetchpriority="high"
+      transition:name={`cover-${gallery.id}`}
+    />
+  </section>
+
+  <section class="container intro">
+    <p class="eyebrow">
+      <time datetime={date.toISOString()}>{date.getFullYear()}</time>
+      {tags.length > 0 && <span> · {tags.join(', ')}</span>}
+    </p>
+    <h1>{title}</h1>
+    <div class="story">
+      <Content />
+    </div>
+  </section>
+
+  <section class="container">
+    <GalleryGrid photos={photos} />
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    height: 70dvh;
+    overflow: hidden;
+  }
+
+  .hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .intro {
+    padding-block: var(--space-6);
+  }
+
+  h1 {
+    font-size: var(--text-display);
+  }
+
+  .story {
+    max-width: 60ch;
+    margin-top: var(--space-4);
+    color: var(--color-text-muted);
+  }
+</style>
