@@ -109,7 +109,13 @@ const shapes = photos.map((_, i) => {
       <img alt="" />
       <figcaption class="viewer-caption"></figcaption>
     </figure>
-    <button class="close" type="button">Close</button>
+    {/* Back to the ring: the same hand-drawn arrow as the gallery pages' header. */}
+    <button class="close" type="button" aria-label="Back">
+      <svg viewBox="0 0 84 40" aria-hidden="true">
+        <path d="M80 20.5c-9-2.2-17.5-.6-26.5.8-8.8 1.3-17.3-1.6-26.1-1.2-6.6.3-12.4.9-19 .4"></path>
+        <path d="M22.5 8.5c-3.3 3.8-7.9 7.6-14.4 11.9 5.2 2.6 10.4 6.4 15.3 11.6"></path>
+      </svg>
+    </button>
     <button class="nav prev" type="button" aria-label="Previous photo" data-browse="-1">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"></path></svg>
     </button>
@@ -165,6 +171,16 @@ const shapes = photos.map((_, i) => {
     const items = [...section.querySelectorAll<HTMLElement>('[data-ring-item]')];
     const shadows = [...section.querySelectorAll<HTMLElement>('[data-ring-shadow]')];
     const step = (2 * Math.PI) / items.length;
+    // Each photo leans by its own few degrees, left or right, like prints scattered on a table
+    // (new on every visit). It straightens as it comes to the front.
+    const MAX_TILT = 6; // degrees
+    // Each photo also turns a little to face outward from the ring's center, more toward the
+    // sides (where it would face straight out) and not at all at the front.
+    const MAX_TURN = 40; // degrees, reached at the sides of the ring
+    const tilts = items.map(() => {
+      const amount = MAX_TILT * (0.35 + 0.65 * Math.random());
+      return Math.random() < 0.5 ? -amount : amount;
+    });
     // The ring eases toward the scroll position instead of following it exactly,
     // which smooths out snap jumps and wheel steps. Larger = slower, smoother.
     const easing = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 160;
@@ -194,6 +210,9 @@ const shapes = photos.map((_, i) => {
         // passes in front of it, so the two never overlap as they swap.
         const offFront = -(angle - 2 * Math.PI * Math.round(angle / (2 * Math.PI))) / step;
         const shuffle = !jump && offFront > 0 && offFront < 1 ? Math.sin(Math.PI * offFront) : 0;
+        // Full tilt from one place away from the front, none at the front.
+        item.style.setProperty('--spin', `${tilts[i] * Math.min(1, Math.abs(offFront))}deg`);
+        item.style.setProperty('--turn', `${Math.sin(angle) * MAX_TURN}deg`);
         for (const el of [item, shadows[i]]) {
           el.style.setProperty('--shuffle', String(shuffle));
           el.style.setProperty('--x', String(x));
@@ -283,20 +302,56 @@ const shapes = photos.map((_, i) => {
       }
     };
 
-    // Arrows: show the previous or next photo, sliding in from that side. The ring turns along
+    // Arrows: show the previous or next photo. The two crossfade: the current photo slides away
+    // and fades out while the next one slides in from the other side and fades in, both at once.
+    // (A copy of the current photo, left in its place, does the leaving.) The ring turns along
     // behind the viewer (unseen), so closing flies the photo back to the front of the ring.
+    const BROWSE_MS = 550;
     const browse = async (direction: number) => {
       if (closing) return;
       const n = items.length;
       const i = (shown + direction + n) % n;
+      let leaving: HTMLImageElement | undefined;
+      if (easing) {
+        const box = big.getBoundingClientRect();
+        leaving = big.cloneNode() as HTMLImageElement;
+        leaving.removeAttribute('srcset');
+        leaving.src = big.currentSrc;
+        Object.assign(leaving.style, {
+          position: 'fixed',
+          left: `${box.left}px`,
+          top: `${box.top}px`,
+          width: `${box.width}px`,
+          height: `${box.height}px`,
+          margin: '0',
+          pointerEvents: 'none',
+        });
+        viewer.append(leaving);
+      }
       turnTo(i, 0);
-      if (!(await fill(i)) || !easing) return;
-      const timing = { duration: 450, easing: ease };
+      if (!(await fill(i)) || !leaving) {
+        leaving?.remove();
+        return;
+      }
+      const timing = { duration: BROWSE_MS, easing: 'cubic-bezier(0.45, 0, 0.2, 1)' };
+      // The next photo comes from the side it's on (right for next, left for previous); the
+      // current one leaves toward the other side.
+      const shift = direction * 2.5;
+      leaving
+        .animate(
+          [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translateX(${-shift}rem)` }],
+          timing,
+        )
+        .finished.finally(() => leaving.remove());
       big.animate(
-        [{ opacity: 0, transform: `translateX(${direction * 3}rem)` }, { opacity: 1, transform: 'none' }],
+        [{ opacity: 0, transform: `translateX(${shift}rem)` }, { opacity: 1, transform: 'none' }],
         timing,
       );
-      caption.animate([{ opacity: 0 }, { opacity: 1 }], timing);
+      caption.animate([{ opacity: 0 }, { opacity: 1 }], {
+        ...timing,
+        delay: BROWSE_MS * 0.3,
+        fill: 'backwards',
+      });
     };
 
     const close = async () => {
@@ -453,23 +508,96 @@ const shapes = photos.map((_, i) => {
       target = turn;
       const sectionTop = section.getBoundingClientRect().top + scrollY;
       scrollTo({ top: sectionTop + scrollable(), behavior: 'instant' });
-      requestAnimationFrame(() => {
-        next.scrollIntoView({ behavior: easing ? 'smooth' : 'instant' });
-        const start = performance.now();
-        const thawWhenHidden = () => {
-          // Out of view, or the visitor scrolled elsewhere meanwhile (give up after 2 s).
-          if (section.getBoundingClientRect().bottom > 0.5 && performance.now() - start < 2000) {
-            requestAnimationFrame(thawWhenHidden);
-            return;
-          }
-          frozen = false;
-          readTarget();
-          turn = target;
-          render();
-          updateActive();
-        };
-        requestAnimationFrame(thawWhenHidden);
+
+      // The arrow drops through the ring, slowly at first then faster like a falling object:
+      // it passes behind the front photos and in front of the back ones, reappears below the
+      // front photo and fades away as it falls on. The arrow sits above the ring,
+      // so a copy placed among the photos does the falling while the arrow itself is hidden.
+      // The page scrolls to the next section a moment behind it, following it down.
+      const DROP_MS = 550;
+      const SCROLL_AFTER_MS = 180;
+      const SCROLL_MS = 700;
+      const arrow = (event.currentTarget as HTMLElement).querySelector('svg');
+      const stage = section.querySelector<HTMLElement>('.stage')!;
+      const drop = new Promise<void>((done) => {
+        if (!easing || !arrow) return done();
+        const box = arrow.getBoundingClientRect();
+        const frame = stage.getBoundingClientRect();
+        const style = getComputedStyle(arrow);
+        const copy = arrow.cloneNode(true) as SVGSVGElement;
+        Object.assign(copy.style, {
+          position: 'absolute',
+          left: `${box.left - frame.left}px`,
+          top: `${box.top - frame.top}px`,
+          width: `${box.width}px`,
+          height: `${box.height}px`,
+          // Photos are stacked 0 (back) to 100 (front): 50 puts the arrow mid-ring.
+          zIndex: '50',
+          pointerEvents: 'none',
+          color: style.color,
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: style.strokeWidth,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+        });
+        copy.querySelectorAll('path').forEach((path) => path.removeAttribute('style'));
+        stage.append(copy);
+        arrow.style.visibility = 'hidden';
+        copy
+          .animate(
+            [
+              { transform: 'translateY(0)', opacity: 1 },
+              { opacity: 1, offset: 0.35 },
+              // Fading out as it falls toward the bottom of the screen, gone before it gets
+              // there (or before the ring's screen, scrolling away, would cut it off).
+              { transform: `translateY(${(frame.bottom - box.top) * 0.7}px)`, opacity: 0 },
+            ],
+            // Ease-in: the speed keeps growing, like something falling.
+            { duration: DROP_MS, easing: 'cubic-bezier(0.55, 0.085, 0.68, 0.53)', fill: 'forwards' },
+          )
+          .finished.finally(() => {
+            copy.remove();
+            done();
+          });
       });
+
+      // Once the page has reached the section and the ring is out of view, the ring goes back to
+      // following the scroll, and the arrow is put back once its fall is over.
+      const thaw = () => {
+        frozen = false;
+        readTarget();
+        turn = target;
+        render();
+        updateActive();
+        drop.then(() => arrow?.style.removeProperty('visibility'));
+      };
+
+      if (!easing) {
+        next.scrollIntoView({ behavior: 'instant' });
+        thaw();
+        return;
+      }
+
+      // The scroll is driven here frame by frame, so it can start on cue and keep pace with the
+      // arrow (the browser's own smooth scroll can't be timed). Scroll snapping would pull each
+      // step back to a snap point, so it's paused meanwhile.
+      const root = document.documentElement;
+      const from = scrollY;
+      const to = next.getBoundingClientRect().top + scrollY;
+      const start = performance.now() + SCROLL_AFTER_MS;
+      root.style.scrollSnapType = 'none';
+      const glide = (now: number) => {
+        const p = Math.min(Math.max((now - start) / SCROLL_MS, 0), 1);
+        scrollTo({ top: from + (to - from) * easeInOut(p), behavior: 'instant' });
+        if (p < 1) {
+          requestAnimationFrame(glide);
+          return;
+        }
+        root.style.removeProperty('scroll-snap-type');
+        thaw();
+      };
+      requestAnimationFrame(glide);
     });
 
     addEventListener('scroll', schedule, { passive: true });
@@ -697,7 +825,8 @@ const shapes = photos.map((_, i) => {
     /* The last step is the hover lift (see below), applied at the photo's own scale so nearer
        photos rise a little more than distant ones, as they would in perspective. */
     transform: translate(var(--ring-x), var(--ring-y)) scale(calc(var(--scale) * var(--boost)))
-      translateY(calc(var(--lift) * -0.04 * var(--photo-height)));
+      translateY(calc(var(--lift) * -0.04 * var(--photo-height)))
+      perspective(calc(var(--photo-height) * 3)) rotateY(var(--turn, 0deg)) rotate(var(--spin, 0deg));
     will-change: transform;
     cursor: pointer;
     /* Shrinking back when the ring starts moving again. */
@@ -875,24 +1004,39 @@ const shapes = photos.map((_, i) => {
     gap: var(--space-1);
   }
 
+  /* Placed and drawn like the back arrow in the gallery pages' header. */
   .close {
     position: absolute;
     top: var(--space-4);
-    right: var(--gutter);
+    left: var(--gutter);
+    display: grid;
+    place-items: center;
+    margin-left: calc(-1 * var(--space-2));
     padding: var(--space-2);
     border: 0;
     background: none;
-    font: inherit;
-    font-size: var(--text-sm);
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
     color: var(--color-text-muted);
     cursor: pointer;
+    transition:
+      color var(--duration-fast) ease,
+      translate var(--duration-base) var(--ease-out);
   }
 
+  /* Nudges left on hover, toward where it leads. */
   .close:hover,
   .close:focus-visible {
     color: var(--color-text);
+    translate: -0.25rem 0;
+  }
+
+  .close svg {
+    width: 2.25rem;
+    height: auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   /* Previous / next: at the window's sides, over the photo's edge when space is short (phones),

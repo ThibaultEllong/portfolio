@@ -11,8 +11,11 @@ const galleries = defineCollection({
       description: z.string(),
       featured: z.boolean().default(false),
       tags: z.array(z.string()).default([]),
-      // The first photo is used as the gallery cover.
-      photos: z.array(z.object({ src: image(), alt: z.string() })).min(1),
+      // The first photo is used as the gallery cover. The caption, if any, is shown under the
+      // photo on the gallery page.
+      photos: z
+        .array(z.object({ src: image(), alt: z.string(), caption: z.string().optional() }))
+        .min(1),
     }),
 });
 

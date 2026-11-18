@@ -72,6 +72,12 @@ h3 {
   color: var(--color-text-muted);
 }
 
+/* Page transitions: elements that move between pages (a gallery's cover flying from the Work
+   page into the gallery) ease in and out instead of moving at a constant speed. */
+::view-transition-group(*) {
+  animation-timing-function: var(--ease-in-out);
+}
+
 /* Scroll reveal: CSS-only, skipped where unsupported or when reduced motion is requested. */
 @keyframes reveal {
   from {

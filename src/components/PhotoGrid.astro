@@ -1,0 +1,106 @@
+---
+import { Image, getImage } from 'astro:assets';
+
+interface Props {
+  photos: { src: ImageMetadata; alt: string; caption?: string }[];
+  /* Position of this grid's first photo among all the photos on the page (several grids on
+     one page share a single chain viewer, which numbers photos in page order). */
+  start?: number;
+  /* Page transition name for the first photo (a gallery's cover flying in from the Work page). */
+  cover?: string;
+}
+
+const { photos, start = 0, cover } = Astro.props;
+
+// Each photo links to a large version of itself.
+const items = await Promise.all(
+  photos.map(async (photo, i) => ({
+    ...photo,
+    index: start + i,
+    first: i === 0,
+    aspect: photo.src.width / photo.src.height,
+    full: await getImage({ src: photo.src, width: Math.min(2400, photo.src.width) }),
+  })),
+);
+---
+
+<div class="grid" data-grid>
+  {
+    items.map((photo) => (
+      <figure class="reveal" style={`--aspect: ${photo.aspect}`}>
+        {/* Opens the chain viewer (ChainViewer); without JavaScript, the large image itself. */}
+        <a href={photo.full.src} data-photo={photo.index}>
+          {
+            // Only the first photo can take part in the page transition. (A transition:name on
+            // the others, even an empty one, would make each of them animate separately.)
+            photo.first && cover ? (
+              <Image
+                src={photo.src}
+                alt={photo.alt}
+                widths={[480, 800, 1200, 1600]}
+                sizes="(min-width: 640px) 40vw, 100vw"
+                loading="eager"
+                transition:name={cover}
+              />
+            ) : (
+              <Image
+                src={photo.src}
+                alt={photo.alt}
+                widths={[480, 800, 1200, 1600]}
+                sizes="(min-width: 640px) 40vw, 100vw"
+                loading={photo.index < 6 ? 'eager' : 'lazy'}
+              />
+            )
+          }
+        </a>
+        {photo.caption && <figcaption>{photo.caption}</figcaption>}
+      </figure>
+    ))
+  }
+</div>
+
+<style>
+  /* Equal-height rows: each photo grows in proportion to its shape (width ÷ height), so every
+     photo in a row ends up the same height and nothing is cropped. --row-height is the height
+     a row aims for; rows stretch a little from it to fill the width exactly. */
+  .grid {
+    --row-height: clamp(9rem, 30vw, 30rem);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--edge, var(--space-2));
+  }
+
+  figure {
+    flex: var(--aspect) 1 calc(var(--aspect) * var(--row-height));
+    min-width: 0;
+  }
+
+  /* Keeps the last row at the usual height instead of stretching its few photos across. */
+  .grid::after {
+    content: '';
+    flex: 999 1 0;
+  }
+
+  figure a {
+    display: block;
+    background: var(--color-surface);
+  }
+
+  figure img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: var(--aspect);
+  }
+
+  figcaption {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  /* While the chain viewer is open, the grid's own photos are hidden (their copies are in the
+     chain). */
+  .grid.is-lifted img {
+    visibility: hidden;
+  }
+</style>

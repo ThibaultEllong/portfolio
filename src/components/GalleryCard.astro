@@ -20,10 +20,11 @@ const cover = gallery.data.photos[0];
       sizes="(min-width: 1000px) 33vw, (min-width: 640px) 50vw, 100vw"
       transition:name={`cover-${gallery.id}`}
     />
-  </div>
-  <div class="meta">
-    <h3>{gallery.data.title}</h3>
-    <time datetime={gallery.data.date.toISOString()}>{gallery.data.date.getFullYear()}</time>
+    {/* Written over the cover, in white on a soft shade so it reads on any photo. */}
+    <div class="meta">
+      <h3>{gallery.data.title}</h3>
+      <time datetime={gallery.data.date.toISOString()}>{gallery.data.date.getFullYear()}</time>
+    </div>
   </div>
 </a>
 
@@ -33,6 +34,7 @@ const cover = gallery.data.photos[0];
   }
 
   .frame {
+    position: relative;
     overflow: hidden;
     aspect-ratio: 4 / 5;
     background: var(--color-surface);
@@ -49,20 +51,32 @@ const cover = gallery.data.photos[0];
     transform: scale(1.04);
   }
 
+  /* Centered on the cover; a light shade over the whole photo keeps the white text readable. */
   .meta {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding-top: var(--space-3);
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    background: rgb(0 0 0 / 0.18);
+    color: #fff;
+    text-align: center;
+    text-shadow: 0 1px 14px rgb(0 0 0 / 0.35);
+    pointer-events: none;
   }
 
   h3 {
-    font-size: var(--text-lg);
+    font-family: var(--font-sans);
+    font-size: clamp(1.75rem, 1.1rem + 1.8vw, 2.75rem);
+    font-weight: 500;
+    letter-spacing: 0.01em;
   }
 
   time {
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
+    letter-spacing: var(--tracking-wide);
+    opacity: 0.85;
   }
 </style>

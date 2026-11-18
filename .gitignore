@@ -22,3 +22,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# original full-size files kept out of git (e.g. PNGs converted to JPEG)
+_originals/

@@ -34,6 +34,8 @@
   --text-lg: 1.25rem;
   --text-xl: clamp(1.5rem, 1.2rem + 1.5vw, 2.25rem);
   --text-display: clamp(2.5rem, 1.5rem + 5vw, 6rem);
+  /* The name above the home page ring (the header's theme switch lines up with it). */
+  --home-name-size: clamp(2.25rem, 1.5rem + 2.5vw, 3.75rem);
   --tracking-wide: 0.12em;
 
   /* Space */

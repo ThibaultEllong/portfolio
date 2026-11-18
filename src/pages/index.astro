@@ -1,13 +1,20 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PhotoRing from '../components/PhotoRing.astro';
-import { SITE } from '../site';
+import { NAV, SITE, url } from '../site';
+
+// The site's menu (Work, About) frames the name here instead of sitting in the header.
+const [left, right] = NAV;
 ---
 
 <BaseLayout>
   <PhotoRing next="about">
     {/* Shown above the ring: edit freely. */}
-    <h1 class="name">{SITE.name}</h1>
+    <nav class="title-row" aria-label="Main">
+      <a class="side left" href={url(left.href)}>{left.label}</a>
+      <h1 class="name">{SITE.name}</h1>
+      <a class="side right" href={url(right.href)}>{right.label}</a>
+    </nav>
     <p class="info">{SITE.tagline}</p>
   </PhotoRing>
 
@@ -46,7 +53,70 @@ import { SITE } from '../site';
 
 <style>
   .name {
-    font-size: clamp(2.25rem, 1.5rem + 2.5vw, 3.75rem);
+    font-size: var(--home-name-size);
+  }
+
+  /* Work · name · About on one line; on phones the two links drop just below the name. */
+  /* Equal side columns keep the name centered whatever the links' widths. */
+  .title-row {
+    display: grid;
+    grid-template-areas: 'left name right';
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    column-gap: clamp(3rem, 9vw, 10rem);
+  }
+
+  .title-row .name {
+    grid-area: name;
+  }
+
+  .left {
+    grid-area: left;
+    justify-self: end;
+  }
+
+  .right {
+    grid-area: right;
+    justify-self: start;
+  }
+
+  @media (max-width: 559px) {
+    .title-row {
+      grid-template-areas:
+        'name name'
+        'left right';
+      grid-template-columns: 1fr 1fr;
+      column-gap: var(--space-5);
+      row-gap: var(--space-2);
+    }
+
+    .title-row .name {
+      white-space: nowrap;
+    }
+
+    .left {
+      justify-self: start;
+    }
+
+    .right {
+      justify-self: end;
+    }
+  }
+
+  .side {
+    padding: var(--space-2);
+    font-size: var(--text-base);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    /* The intro lets clicks through to the photos; the links take them. */
+    pointer-events: auto;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .side:hover,
+  .side:focus-visible {
+    color: var(--color-text);
   }
 
   .info {

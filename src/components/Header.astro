@@ -8,7 +8,7 @@ const isHome = current.replace(/\/$/, '') === url('/').replace(/\/$/, '');
 const isGallery = new RegExp(`^${url('/work/')}[^/]+/?$`).test(current);
 ---
 
-<header class:list={['header', { solid: isGallery }]}>
+<header class:list={['header', { solid: isGallery, home: isHome }]}>
   <div class="container inner">
     {
       isGallery && (
@@ -28,25 +28,35 @@ const isGallery = new RegExp(`^${url('/work/')}[^/]+/?$`).test(current);
         </a>
       )
     }
-    <nav aria-label="Main">
-      <ul>
-        {NAV.map((item) => {
-          const href = url(item.href);
-          return (
-            <li>
-              <a href={href} aria-current={current.startsWith(href) ? 'page' : undefined}>
-                {item.label}
-              </a>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
-    <button class="theme" type="button" aria-label="Dark mode" aria-pressed="false" data-theme-toggle>
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="12" cy="12" r="8"></circle>
-        <path d="M12 4a8 8 0 0 1 0 16Z"></path>
-      </svg>
+    {
+      // On the home page the menu sits on either side of the name instead.
+      !isHome && (
+        <nav aria-label="Main">
+          <ul>
+            {NAV.map((item) => {
+              const href = url(item.href);
+              return (
+                <li>
+                  <a href={href} aria-current={current.startsWith(href) ? 'page' : undefined}>
+                    {item.label}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      )
+    }
+    {/* A sliding switch: the knob sits left in light mode and right in dark mode. */}
+    <button
+      class="theme"
+      type="button"
+      role="switch"
+      aria-label="Dark mode"
+      aria-checked="false"
+      data-theme-toggle
+    >
+      <span class="track"><span class="knob"></span></span>
     </button>
   </div>
 </header>
@@ -59,7 +69,7 @@ const isGallery = new RegExp(`^${url('/work/')}[^/]+/?$`).test(current);
     return theme ? theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
   };
   const syncButton = () => {
-    document.querySelector('[data-theme-toggle]')?.setAttribute('aria-pressed', String(isDark()));
+    document.querySelector('[data-theme-toggle]')?.setAttribute('aria-checked', String(isDark()));
   };
 
   document.addEventListener('click', (event) => {
@@ -127,10 +137,12 @@ const isGallery = new RegExp(`^${url('/work/')}[^/]+/?$`).test(current);
     stroke-linejoin: round;
   }
 
+  /* Right-aligned, so the theme toggle stays on the right when it's alone (home page); on other
+     pages the menu's auto margin keeps the name on the left. */
   .inner {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: var(--space-4);
   }
 
@@ -163,7 +175,27 @@ const isGallery = new RegExp(`^${url('/work/')}[^/]+/?$`).test(current);
     margin-left: auto;
   }
 
-  /* A half-filled circle: light and dark. */
+  /* On the home page the header holds only the switch: it's lowered to line up with the row of
+     Work · name · About (which starts 4.5rem from the top; its middle is half the name's line). */
+  .header.home {
+    padding-top: calc(4.5rem + 0.55 * var(--home-name-size) - 0.875rem);
+    /* That makes the header reach down over the name's row: let clicks through to Work and
+       About, except on the switch itself. */
+    pointer-events: none;
+  }
+
+  .header.home .theme {
+    pointer-events: auto;
+  }
+
+  /* On phones the name fills that line, so the switch stays at the top. (Same width as the home
+     page's breakpoint, where Work and About move below the name.) */
+  @media (max-width: 559px) {
+    .header.home {
+      padding-top: var(--space-4);
+    }
+  }
+
   .theme {
     display: grid;
     place-items: center;
@@ -175,20 +207,38 @@ const isGallery = new RegExp(`^${url('/work/')}[^/]+/?$`).test(current);
     transition: color var(--duration-fast) ease;
   }
 
-  .theme:hover {
+  .theme:hover,
+  .theme:focus-visible {
     color: var(--color-text);
   }
 
-  .theme svg {
-    width: 1.125rem;
-    height: 1.125rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.5;
+  .track {
+    display: block;
+    width: 2.25rem;
+    height: 1.25rem;
+    padding: 2px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
   }
 
-  .theme path {
-    fill: currentColor;
-    stroke: none;
+  .knob {
+    display: block;
+    width: calc(1.25rem - 6px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: currentColor;
+    transition: translate var(--duration-base) var(--ease-out);
+  }
+
+  /* Slid to the right in dark mode, whether chosen with the switch or set by the device. The
+     position follows the page's theme, so it's right from the first paint. */
+  :global(:root[data-theme='dark']) .knob {
+    translate: 1rem 0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .knob {
+      translate: 1rem 0;
+    }
   }
 </style>

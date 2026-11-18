@@ -1,34 +1,48 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import GalleryCard from '../../components/GalleryCard.astro';
+import { galleriesByMedium } from '../../lib/galleries';
 import { url } from '../../site';
 
-const galleries = (await getCollection('galleries')).sort(
-  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
-);
+// Film first, then digital (from each folder name's ending), newest first within each.
+const groups = await galleriesByMedium();
 ---
 
 <BaseLayout title="Work" description="All photography galleries.">
   <div class="container page">
-    {/* Every gallery by name: a column on the left on wide screens, a row above on phones. */}
+    {/* Every gallery by name, grouped by medium: a column on the left on wide screens, rows
+        above on phones. "All" shows every gallery on one page. */}
     <nav class="menu" aria-label="Galleries">
-      <p class="eyebrow">Galleries</p>
-      <ul>
-        {
-          galleries.map((gallery) => (
-            <li>
-              <a href={url(`/work/${gallery.id}/`)}>{gallery.data.title}</a>
-            </li>
-          ))
-        }
-      </ul>
+      <a class="all" href={url('/work/all/')}>All</a>
+      {
+        groups.map((group) => (
+          <div class="group">
+            <p class="eyebrow">{group.label}</p>
+            <ul>
+              {group.galleries.map((gallery) => (
+                <li>
+                  <a href={url(`/work/${gallery.id}/`)}>{gallery.data.title}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
     </nav>
     <section class="content">
       <h1>Work</h1>
-      <div class="cards">
-        {galleries.map((gallery) => <GalleryCard gallery={gallery} />)}
-      </div>
+      {
+        groups.map((group) => (
+          <section class="medium" aria-label={group.label}>
+            <h2 class="eyebrow">{group.label}</h2>
+            <div class="cards">
+              {group.galleries.map((gallery) => (
+                <GalleryCard gallery={gallery} />
+              ))}
+            </div>
+          </section>
+        ))
+      }
     </section>
   </div>
 </BaseLayout>
@@ -37,7 +51,7 @@ const galleries = (await getCollection('galleries')).sort(
   .page {
     display: grid;
     gap: var(--space-5);
-    padding-top: var(--space-7);
+    padding-block: var(--space-7);
   }
 
   @media (min-width: 900px) {
@@ -56,6 +70,11 @@ const galleries = (await getCollection('galleries')).sort(
     .menu ul {
       flex-direction: column;
     }
+  }
+
+  .menu {
+    display: grid;
+    gap: var(--space-5);
   }
 
   .menu ul {
@@ -82,6 +101,15 @@ const galleries = (await getCollection('galleries')).sort(
   h1 {
     font-size: var(--text-display);
     margin-bottom: var(--space-6);
+  }
+
+  .medium + .medium {
+    margin-top: var(--space-7);
+  }
+
+  .medium h2 {
+    margin-bottom: var(--space-4);
+    font-family: inherit;
   }
 
   .cards {
