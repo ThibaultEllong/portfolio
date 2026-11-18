@@ -694,17 +694,38 @@ const shapes = photos.map((_, i) => {
     top: calc(50% + var(--ring-offset));
     left: 50%;
     translate: -50% -50%;
-    transform: translate(var(--ring-x), var(--ring-y)) scale(calc(var(--scale) * var(--boost)));
+    /* The last step is the hover lift (see below), applied at the photo's own scale so nearer
+       photos rise a little more than distant ones, as they would in perspective. */
+    transform: translate(var(--ring-x), var(--ring-y)) scale(calc(var(--scale) * var(--boost)))
+      translateY(calc(var(--lift) * -0.04 * var(--photo-height)));
     will-change: transform;
     cursor: pointer;
     /* Shrinking back when the ring starts moving again. */
-    transition: --boost calc(var(--duration-fast) * 2) var(--ease-in-out);
+    transition:
+      --boost calc(var(--duration-fast) * 2) var(--ease-in-out),
+      --lift var(--duration-base) var(--ease-out);
   }
 
   /* Growing once the ring has settled on this photo. */
   .is-active {
     --boost: var(--enlarge);
-    transition: --boost calc(var(--duration-base) * 1.75) var(--ease-out);
+    transition:
+      --boost calc(var(--duration-base) * 1.75) var(--ease-out),
+      --lift var(--duration-base) var(--ease-out);
+  }
+
+  /* Hover: the photo rises slightly off the ground (its shadow stays put) to show it can be
+     clicked. Only for pointers that can hover, so a tap on a phone doesn't leave it raised. */
+  @property --lift {
+    syntax: '<number>';
+    inherits: false;
+    initial-value: 0;
+  }
+
+  @media (hover: hover) {
+    .item:hover {
+      --lift: 1;
+    }
   }
 
   /* A soft oval as wide as the photo, on the ground line straight below it. */
@@ -761,7 +782,11 @@ const shapes = photos.map((_, i) => {
        stays solid, so everything past about 100° from the front is fully hidden.
        On top of that, --haze adds an even layer to every photo except the one at the front
        (the min() term is 0 at the very front and 1 from just beside it). */
-    opacity: calc(1.8 * (1 - var(--depth)) + var(--haze) * min(1, (1 - var(--depth)) * 200));
+    /* Capped just short of solid, so the back of the ring stays very faintly visible. */
+    opacity: min(
+      0.93,
+      1.8 * (1 - var(--depth)) + var(--haze) * min(1, (1 - var(--depth)) * 200)
+    );
     pointer-events: none;
   }
 
