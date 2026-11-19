@@ -2,7 +2,9 @@
 # Draft: check the title, date (month unknown), description and alt texts.
 title: Martizay
 date: 2026-06-01
-description: A summer in the countryside around Martizay, on film.
+description:
+  fr: Un été à la campagne autour de Martizay, en argentique.
+  en: A summer in the countryside around Martizay, on film.
 tags: [portrait, film]
 photos:
   - src: ./000997500003.jpg

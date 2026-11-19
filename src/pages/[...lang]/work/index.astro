@@ -1,27 +1,31 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import GalleryCard from '../../components/GalleryCard.astro';
-import { galleriesByMedium } from '../../lib/galleries';
-import { url } from '../../site';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import GalleryCard from '../../../components/GalleryCard.astro';
+import { galleriesByMedium } from '../../../lib/galleries';
+import { langPaths, link, pick, t, type Lang } from '../../../i18n';
+
+export const getStaticPaths = langPaths;
+
+const { lang } = Astro.props as { lang: Lang };
 
 // Film first, then digital (from each folder name's ending), newest first within each.
 const groups = await galleriesByMedium();
 ---
 
-<BaseLayout title="Work" description="All photography galleries.">
+<BaseLayout lang={lang} title={t(lang).work} description={t(lang).workDescription}>
   <div class="container page">
     {/* Every gallery by name, grouped by medium: a column on the left on wide screens, rows
         above on phones. "All" shows every gallery on one page. */}
-    <nav class="menu" aria-label="Galleries">
-      <a class="all" href={url('/work/all/')}>All</a>
+    <nav class="menu" aria-label={t(lang).galleries}>
+      <a class="all" href={link(lang, '/work/all/')}>{t(lang).all}</a>
       {
         groups.map((group) => (
           <div class="group">
-            <p class="eyebrow">{group.label}</p>
+            <p class="eyebrow">{t(lang).media[group.medium]}</p>
             <ul>
               {group.galleries.map((gallery) => (
                 <li>
-                  <a href={url(`/work/${gallery.id}/`)}>{gallery.data.title}</a>
+                  <a href={link(lang, `/work/${gallery.id}/`)}>{pick(lang, gallery.data.title)}</a>
                 </li>
               ))}
             </ul>
@@ -30,14 +34,14 @@ const groups = await galleriesByMedium();
       }
     </nav>
     <section class="content">
-      <h1>Work</h1>
+      <h1>{t(lang).work}</h1>
       {
         groups.map((group) => (
-          <section class="medium" aria-label={group.label}>
-            <h2 class="eyebrow">{group.label}</h2>
+          <section class="medium" aria-label={t(lang).media[group.medium]}>
+            <h2 class="eyebrow">{t(lang).media[group.medium]}</h2>
             <div class="cards">
               {group.galleries.map((gallery) => (
-                <GalleryCard gallery={gallery} />
+                <GalleryCard lang={lang} gallery={gallery} />
               ))}
             </div>
           </section>

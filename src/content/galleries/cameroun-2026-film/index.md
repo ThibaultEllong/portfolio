@@ -1,8 +1,12 @@
 ---
 # Draft: check the title, date (month unknown), description and alt texts.
-title: Cameroun
+title:
+  fr: Cameroun
+  en: Cameroon
 date: 2026-06-01
-description: Days in Cameroon on film, between the river, the beach and the market.
+description:
+  fr: Des journées au Cameroun en argentique, entre le fleuve, la plage et le marché.
+  en: Days in Cameroon on film, between the river, the beach and the market.
 tags: [travel, film]
 photos:
   - src: ./000986830008.jpg

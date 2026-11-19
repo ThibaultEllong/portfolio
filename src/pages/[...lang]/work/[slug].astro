@@ -1,29 +1,41 @@
 ---
 import { getCollection, render } from 'astro:content';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import PhotoGrid from '../../components/PhotoGrid.astro';
-import ChainViewer from '../../components/ChainViewer.astro';
-import { mediumOf } from '../../lib/galleries';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import PhotoGrid from '../../../components/PhotoGrid.astro';
+import ChainViewer from '../../../components/ChainViewer.astro';
+import { mediumOf } from '../../../lib/galleries';
+import { langPaths, pick, t, tagLabel } from '../../../i18n';
 
+// Every gallery, in each language.
 export async function getStaticPaths() {
   const galleries = await getCollection('galleries');
-  return galleries.map((gallery) => ({ params: { slug: gallery.id }, props: { gallery } }));
+  return langPaths().flatMap(({ params, props }) =>
+    galleries.map((gallery) => ({
+      params: { ...params, slug: gallery.id },
+      props: { ...props, gallery },
+    })),
+  );
 }
 
-const { gallery } = Astro.props;
-const { title, date, description, tags, photos } = gallery.data;
+const { lang, gallery } = Astro.props;
+const { date, tags, photos } = gallery.data;
+const title = pick(lang, gallery.data.title);
+const description = pick(lang, gallery.data.description);
 const [cover] = photos;
 const { Content } = await render(gallery);
+const medium = mediumOf(gallery);
 // The medium is already in the line above the title, so the tag is left out there.
-const otherTags = tags.filter((tag) => tag.toLowerCase() !== mediumOf(gallery).toLowerCase());
+const otherTags = tags
+  .filter((tag) => tag.toLowerCase() !== medium)
+  .map((tag) => tagLabel(lang, tag));
 ---
 
-<BaseLayout title={title} description={description} image={cover.src}>
+<BaseLayout lang={lang} title={title} description={description} image={cover.src}>
   <article class="gallery">
     <header class="intro">
       <p class="eyebrow">
         <time datetime={date.toISOString()}>{date.getFullYear()}</time>
-        <span> · {mediumOf(gallery)}</span>
+        <span> · {t(lang).media[medium]}</span>
         {otherTags.length > 0 && <span> · {otherTags.join(', ')}</span>}
       </p>
       <h1>{title}</h1>
@@ -34,10 +46,10 @@ const otherTags = tags.filter((tag) => tag.toLowerCase() !== mediumOf(gallery).t
     </header>
 
     {/* The Work page's cover flies into the first photo. */}
-    <PhotoGrid photos={photos} cover={`cover-${gallery.id}`} />
+    <PhotoGrid lang={lang} photos={photos} cover={`cover-${gallery.id}`} />
   </article>
 
-  <ChainViewer />
+  <ChainViewer lang={lang} />
 </BaseLayout>
 
 <style>

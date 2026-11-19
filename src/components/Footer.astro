@@ -1,5 +1,12 @@
 ---
 import { SITE } from '../site';
+import { t, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
 ---
 
 <footer class="footer">
@@ -9,7 +16,7 @@ import { SITE } from '../site';
     </p>
     <ul>
       <li>
-        <a href={`mailto:${SITE.email}`}>Email</a>
+        <a href={`mailto:${SITE.email}`}>{t(lang).email}</a>
       </li>
       {SITE.social.map((link) => (
         <li>

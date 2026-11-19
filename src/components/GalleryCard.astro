@@ -1,28 +1,29 @@
 ---
 import { Image } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
-import { url } from '../site';
+import { link, pick, type Lang } from '../i18n';
 
 interface Props {
+  lang: Lang;
   gallery: CollectionEntry<'galleries'>;
 }
 
-const { gallery } = Astro.props;
+const { lang, gallery } = Astro.props;
 const cover = gallery.data.photos[0];
 ---
 
-<a class="card reveal" href={url(`/work/${gallery.id}/`)}>
+<a class="card reveal" href={link(lang, `/work/${gallery.id}/`)}>
   <div class="frame">
     <Image
       src={cover.src}
-      alt={cover.alt}
+      alt={pick(lang, cover.alt)}
       widths={[480, 800, 1200]}
       sizes="(min-width: 1000px) 33vw, (min-width: 640px) 50vw, 100vw"
       transition:name={`cover-${gallery.id}`}
     />
     {/* Written over the cover, in white on a soft shade so it reads on any photo. */}
     <div class="meta">
-      <h3>{gallery.data.title}</h3>
+      <h3>{pick(lang, gallery.data.title)}</h3>
       <time datetime={gallery.data.date.toISOString()}>{gallery.data.date.getFullYear()}</time>
     </div>
   </div>

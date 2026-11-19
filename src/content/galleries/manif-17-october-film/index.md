@@ -3,7 +3,9 @@
 # and the first one is the gallery's cover. Any photo can also get a `caption:` line.
 title: 17 Octobre
 date: 2026-10-17
-description: A day of protest in Lille, on film, from the crowd and the tear gas to the square at dusk.
+description:
+  fr: Une journée de manifestation à Lille, en argentique, de la foule et des gaz lacrymogènes jusqu'à la place au crépuscule.
+  en: A day of protest in Lille, on film, from the crowd and the tear gas to the square at dusk.
 tags: [street, film]
 photos:
   - src: ./001059080004.jpg

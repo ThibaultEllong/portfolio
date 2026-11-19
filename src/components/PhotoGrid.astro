@@ -1,8 +1,10 @@
 ---
 import { Image, getImage } from 'astro:assets';
+import { pick, type Lang, type Text } from '../i18n';
 
 interface Props {
-  photos: { src: ImageMetadata; alt: string; caption?: string }[];
+  lang: Lang;
+  photos: { src: ImageMetadata; alt: Text; caption?: Text }[];
   /* Position of this grid's first photo among all the photos on the page (several grids on
      one page share a single chain viewer, which numbers photos in page order). */
   start?: number;
@@ -10,12 +12,14 @@ interface Props {
   cover?: string;
 }
 
-const { photos, start = 0, cover } = Astro.props;
+const { lang, photos, start = 0, cover } = Astro.props;
 
 // Each photo links to a large version of itself.
 const items = await Promise.all(
   photos.map(async (photo, i) => ({
     ...photo,
+    alt: pick(lang, photo.alt),
+    caption: photo.caption && pick(lang, photo.caption),
     index: start + i,
     first: i === 0,
     aspect: photo.src.width / photo.src.height,

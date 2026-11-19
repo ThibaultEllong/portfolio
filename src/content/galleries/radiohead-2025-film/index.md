@@ -2,7 +2,9 @@
 # Draft: check the title, date (month unknown), description and alt texts.
 title: Radiohead
 date: 2025-06-01
-description: Berlin and a Radiohead concert on film, from the city's landmarks to the lights of the stage.
+description:
+  fr: Berlin et un concert de Radiohead en argentique, des monuments de la ville aux lumières de la scène.
+  en: Berlin and a Radiohead concert on film, from the city's landmarks to the lights of the stage.
 tags: [music, travel, film]
 photos:
   - src: ./000929280003.jpg

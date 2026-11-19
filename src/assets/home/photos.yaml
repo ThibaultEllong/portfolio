@@ -1,91 +1,92 @@
 # Photos shown in the home page ring. The ring shuffles them into a new random order on every
 # visit; this order is only used if JavaScript is off.
 # Each photo: the file, a title shown under the front photo, an alt text describing
-# the photo for screen readers, and an optional location and year, e.g.:
+# the photo for screen readers, and an optional location and year. Any text can be the same
+# in French and English, or given in each language as { fr: ..., en: ... }, e.g.:
 #
 #   - src: ./my-photo.jpg
-#     title: Title under the photo
+#     title: { fr: Titre sous la photo, en: Title under the photo }
 #     alt: What the photo shows
 #     location: City, Country
 #     year: 2026
 
 photos:
   - src: ./000986830017.jpg
-    title: Horse on the beach
+    title: { fr: Cheval sur la plage, en: Horse on the beach }
     alt: A rider on a horse on a sandy beach, with a boy watching nearby
 
   - src: ./000997500019.jpg
-    title: Red boots
+    title: { fr: Bottes rouges, en: Red boots }
     alt: A woman in a cowboy hat and red boots sitting on a plastic chair in the grass
 
   - src: ./001006840003.jpg
-    title: Garden pool
+    title: { fr: Piscine au jardin, en: Garden pool }
     alt: A swimming pool in a sunlit garden surrounded by trees
 
   - src: ./001021810008.jpg
-    title: Red car
+    title: { fr: Voiture rouge, en: Red car }
     alt: An old red car parked in tall grass in front of a green wooden garage
 
   - src: ./001021810019.jpg
-    title: Seaside terrace
+    title: { fr: Terrasse au bord de l'eau, en: Seaside terrace }
     alt: A crowded terrace on the rocks by the sea, with mountains across the water
 
   - src: ./001021810025.jpg
-    title: Picnic on the rocks
+    title: { fr: Pique-nique sur les rochers, en: Picnic on the rocks }
     alt: A family sitting on rocks sharing food, one of them holding a baby
 
   - src: ./001021820001.jpg
-    title: Hidden cove
+    title: { fr: Crique cachée, en: Hidden cove }
     alt: A turquoise bay below steep green mountains
 
   - src: ./001021820010.jpg
-    title: Mountain lake
+    title: { fr: Lac de montagne, en: Mountain lake }
     alt: A lake in a green mountain valley seen from a rocky ridge
 
   - src: ./001021820011.jpg
-    title: The trail down
+    title: { fr: Le sentier de descente, en: The trail down }
     alt: A path winding down a green ridge toward a mountain lake
 
   - src: ./001021820017.jpg
-    title: Camp by the rock
+    title: { fr: Campement près du rocher, en: Camp by the rock }
     alt: A tent and sheep beside a large boulder on a grassy headland
 
   - src: ./001021820030.jpg
-    title: Road to the mountains
+    title: { fr: Route vers les montagnes, en: Road to the mountains }
     alt: A road curving toward green mountains under scattered clouds
 
   - src: ./001021830002.jpg
-    title: Ivy house
+    title: { fr: Maison au lierre, en: Ivy house }
     alt: A house almost entirely covered in ivy under a blue sky
 
   - src: ./001021830008.jpg
-    title: Flag bearer
+    title: { fr: Porte-drapeau, en: Flag bearer }
     alt: A child in a red football shirt on someone's shoulders under a waving Norwegian flag
 
   - src: ./001021830009.jpg
-    title: Match day
+    title: { fr: Jour de match, en: Match day }
     alt: Children in red football shirts on adults' shoulders in a crowd, with a Norwegian flag behind
 
   - src: ./001021830016.jpg
-    title: The ferry
+    title: { fr: Le ferry, en: The ferry }
     alt: A ferry passing behind a person standing on wet rocks by the sea
 
   - src: ./001021830028.jpg
-    title: Red cabin
+    title: { fr: Cabane rouge, en: Red cabin }
     alt: A small red cabin in a green meadow by the sea
 
   - src: ./001059080028.jpg
-    title: Tree in the smoke
+    title: { fr: Arbre dans la fumée, en: Tree in the smoke }
     alt: A young tree in a park, with smoke drifting through the trees behind it
 
   - src: ./001059100009.jpg
-    title: Smoke on the square
+    title: { fr: Fumée sur la place, en: Smoke on the square }
     alt: Silhouettes on a hazy city square in front of a tall belfry
 
   - src: ./001059100015.jpg
-    title: After the fire
+    title: { fr: Après le feu, en: After the fire }
     alt: A burnt bicycle on a sunlit city street, with a crowd in the distance
 
   - src: ./001059100034.jpg
-    title: Bonfire on the square
+    title: { fr: Feu sur la place, en: Bonfire on the square }
     alt: People running past a fire on a cobbled city square

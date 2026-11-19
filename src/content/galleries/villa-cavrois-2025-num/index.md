@@ -2,7 +2,9 @@
 # Draft: check the title, date (month unknown), description and alt texts.
 title: Villa Cavrois
 date: 2025-06-01
-description: Light, colour and detail inside the Villa Cavrois.
+description:
+  fr: Lumière, couleurs et détails à l'intérieur de la Villa Cavrois.
+  en: Light, colour and detail inside the Villa Cavrois.
 tags: [architecture, digital]
 photos:
   - src: ./bench-2.jpg

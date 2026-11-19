@@ -1,0 +1,55 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { SITE } from '../../site';
+import { langPaths, t, type Lang } from '../../i18n';
+
+export const getStaticPaths = langPaths;
+
+const { lang } = Astro.props as { lang: Lang };
+---
+
+<BaseLayout lang={lang} title={t(lang).about} description={`${t(lang).about} — ${SITE.name}.`}>
+  <section class="container page">
+    <p class="eyebrow">{t(lang).about}</p>
+    <h1>{SITE.name}</h1>
+    {/* Placeholder: replace with your own bio, in each language. */}
+    {
+      lang === 'fr' ? (
+        <div class="bio">
+          <p>Une courte biographie : qui vous êtes, ce que vous photographiez et où vous vivez.</p>
+          <p>Pour une commande ou un tirage, écrivez à <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+        </div>
+      ) : (
+        <div class="bio">
+          <p>A short bio goes here: who you are, what you photograph, and where you're based.</p>
+          <p>For commissions and prints, write to <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-top: var(--space-7);
+  }
+
+  h1 {
+    font-size: var(--text-display);
+    margin-bottom: var(--space-5);
+  }
+
+  .bio {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 60ch;
+    font-size: var(--text-lg);
+    color: var(--color-text-muted);
+  }
+
+  .bio a {
+    color: var(--color-text);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+</style>

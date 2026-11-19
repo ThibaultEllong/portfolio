@@ -1,8 +1,12 @@
 ---
 # Draft: check the title, date (month unknown), description and alt texts.
-title: Norway
+title:
+  fr: Norvège
+  en: Norway
 date: 2025-06-01
-description: A road trip through Norway, from the open plateaus and the northern lights to the misty fjords.
+description:
+  fr: Un road trip à travers la Norvège, des hauts plateaux et des aurores boréales aux fjords dans la brume.
+  en: A road trip through Norway, from the open plateaus and the northern lights to the misty fjords.
 tags: [travel, digital]
 photos:
   - src: ./DSC00103.jpg

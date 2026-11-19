@@ -1,16 +1,20 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import PhotoGrid from '../../components/PhotoGrid.astro';
-import ChainViewer from '../../components/ChainViewer.astro';
-import { galleriesByMedium } from '../../lib/galleries';
-import { url } from '../../site';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import PhotoGrid from '../../../components/PhotoGrid.astro';
+import ChainViewer from '../../../components/ChainViewer.astro';
+import { galleriesByMedium } from '../../../lib/galleries';
+import { langPaths, link, pick, t, type Lang } from '../../../i18n';
+
+export const getStaticPaths = langPaths;
+
+const { lang } = Astro.props as { lang: Lang };
 
 // Every gallery, one after the other, in the Work page's order (film, then digital, newest
 // first), each under its own name. One chain viewer runs through all the photos on the page,
 // so each grid is told where its photos start in that sequence.
 const groups = await galleriesByMedium();
 const sections = groups.flatMap((group) =>
-  group.galleries.map((gallery) => ({ gallery, medium: group.label })),
+  group.galleries.map((gallery) => ({ gallery, medium: t(lang).media[group.medium] })),
 );
 let start = 0;
 const placed = sections.map((section) => {
@@ -20,11 +24,11 @@ const placed = sections.map((section) => {
 });
 ---
 
-<BaseLayout title="All" description="Every gallery on one page.">
+<BaseLayout lang={lang} title={t(lang).all} description={t(lang).allDescription}>
   <article class="all">
     <header class="intro">
-      <p class="eyebrow">{placed.length} galleries · {start} photos</p>
-      <h1>All</h1>
+      <p class="eyebrow">{t(lang).galleriesCount(placed.length, start)}</p>
+      <h1>{t(lang).all}</h1>
     </header>
 
     {
@@ -32,19 +36,19 @@ const placed = sections.map((section) => {
         <section class="gallery" aria-labelledby={`title-${gallery.id}`}>
           <header class="name">
             <h2 id={`title-${gallery.id}`}>
-              <a href={url(`/work/${gallery.id}/`)}>{gallery.data.title}</a>
+              <a href={link(lang, `/work/${gallery.id}/`)}>{pick(lang, gallery.data.title)}</a>
             </h2>
             <p class="eyebrow">
               {gallery.data.date.getFullYear()} · {medium}
             </p>
           </header>
-          <PhotoGrid photos={gallery.data.photos} start={start} />
+          <PhotoGrid lang={lang} photos={gallery.data.photos} start={start} />
         </section>
       ))
     }
   </article>
 
-  <ChainViewer />
+  <ChainViewer lang={lang} />
 </BaseLayout>
 
 <style>

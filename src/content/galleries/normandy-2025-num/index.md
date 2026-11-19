@@ -1,8 +1,12 @@
 ---
 # Draft: check the title, date (month unknown), description and alt texts.
-title: Normandy
+title:
+  fr: Normandie
+  en: Normandy
 date: 2025-06-01
-description: The cliffs and beaches of the Normandy coast, from first light to sunset.
+description:
+  fr: Les falaises et les plages de la côte normande, de la première lumière au coucher du soleil.
+  en: The cliffs and beaches of the Normandy coast, from first light to sunset.
 tags: [travel, digital]
 photos:
   - src: ./DSC00682.jpg

@@ -2,7 +2,9 @@
 # Draft: check the title, date (month unknown), description and alt texts.
 title: Fred again..
 date: 2026-06-01
-description: Fred again.. live on black-and-white film, from the decks and the crowd to the brass under the canvas.
+description:
+  fr: Fred again.. en concert sur pellicule noir et blanc, des platines et de la foule jusqu'aux cuivres sous le chapiteau.
+  en: Fred again.. live on black-and-white film, from the decks and the crowd to the brass under the canvas.
 tags: [music, film]
 photos:
   - src: ./000959590001.jpg

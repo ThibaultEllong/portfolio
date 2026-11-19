@@ -1,18 +1,26 @@
 ---
-import { NAV, SITE, url } from '../site';
+import { NAV, SITE } from '../site';
+import { LANGS, link, pagePath, t, type Lang } from '../i18n';
 
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
 const current = Astro.url.pathname;
+// The page's path without the base path or language, e.g. "/work/all/".
+const path = pagePath(current);
 // The home page shows the name large above the ring, so the header leaves it out there.
-const isHome = current.replace(/\/$/, '') === url('/').replace(/\/$/, '');
+const isHome = path === '/';
 // Inside a gallery (/work/<gallery>/) the header is solid, so photos don't show through it.
-const isGallery = new RegExp(`^${url('/work/')}[^/]+/?$`).test(current);
+const isGallery = /^\/work\/[^/]+\/?$/.test(path);
 ---
 
 <header class:list={['header', { solid: isGallery, home: isHome }]}>
   <div class="container inner">
     {
       isGallery && (
-        <a class="back" href={url('/work/')} aria-label="Back to Work">
+        <a class="back" href={link(lang, '/work/')} aria-label={t(lang).backToWork}>
           {/* The home page's hand-drawn arrow, turned to point left. */}
           <svg viewBox="0 0 84 40" aria-hidden="true">
             <path d="M80 20.5c-9-2.2-17.5-.6-26.5.8-8.8 1.3-17.3-1.6-26.1-1.2-6.6.3-12.4.9-19 .4" />
@@ -23,7 +31,7 @@ const isGallery = new RegExp(`^${url('/work/')}[^/]+/?$`).test(current);
     }
     {
       !isHome && (
-        <a class="brand" href={url('/')}>
+        <a class="brand" href={link(lang, '/')}>
           {SITE.name}
         </a>
       )
@@ -31,14 +39,14 @@ const isGallery = new RegExp(`^${url('/work/')}[^/]+/?$`).test(current);
     {
       // On the home page the menu sits on either side of the name instead.
       !isHome && (
-        <nav aria-label="Main">
+        <nav class="menu" aria-label={t(lang).mainMenu}>
           <ul>
             {NAV.map((item) => {
-              const href = url(item.href);
+              const href = link(lang, item.href);
               return (
                 <li>
                   <a href={href} aria-current={current.startsWith(href) ? 'page' : undefined}>
-                    {item.label}
+                    {t(lang)[item.key]}
                   </a>
                 </li>
               );
@@ -47,12 +55,27 @@ const isGallery = new RegExp(`^${url('/work/')}[^/]+/?$`).test(current);
         </nav>
       )
     }
+    {/* FR / EN: the same page in the other language; the current one is highlighted. */}
+    <nav class="langs" aria-label={t(lang).language}>
+      {
+        LANGS.map((other) => (
+          <a
+            href={link(other, path)}
+            hreflang={other}
+            lang={other}
+            aria-current={other === lang ? 'true' : undefined}
+          >
+            {other.toUpperCase()}
+          </a>
+        ))
+      }
+    </nav>
     {/* A sliding switch: the knob sits left in light mode and right in dark mode. */}
     <button
       class="theme"
       type="button"
       role="switch"
-      aria-label="Dark mode"
+      aria-label={t(lang).darkMode}
       aria-checked="false"
       data-theme-toggle
     >
@@ -171,8 +194,25 @@ const isGallery = new RegExp(`^${url('/work/')}[^/]+/?$`).test(current);
     color: var(--color-text);
   }
 
-  nav {
+  .menu {
     margin-left: auto;
+  }
+
+  .langs {
+    display: flex;
+    gap: var(--space-1);
+  }
+
+  .langs a {
+    padding: var(--space-1);
+  }
+
+  /* The current language stands out; the other one is the link to switch. */
+  .langs a[aria-current] {
+    color: var(--color-text);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.35em;
   }
 
   /* On the home page the header holds only the switch: it's lowered to line up with the row of
@@ -184,7 +224,8 @@ const isGallery = new RegExp(`^${url('/work/')}[^/]+/?$`).test(current);
     pointer-events: none;
   }
 
-  .header.home .theme {
+  .header.home .theme,
+  .header.home .langs {
     pointer-events: auto;
   }
 

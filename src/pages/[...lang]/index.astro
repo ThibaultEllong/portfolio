@@ -1,40 +1,62 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import PhotoRing from '../components/PhotoRing.astro';
-import { NAV, SITE, url } from '../site';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PhotoRing from '../../components/PhotoRing.astro';
+import { NAV, SITE } from '../../site';
+import { langPaths, link, t, type Lang } from '../../i18n';
 
+export const getStaticPaths = langPaths;
+
+const { lang } = Astro.props as { lang: Lang };
 // The site's menu (Work, About) frames the name here instead of sitting in the header.
 const [left, right] = NAV;
 ---
 
-<BaseLayout>
-  <PhotoRing next="about">
+<BaseLayout lang={lang}>
+  <PhotoRing lang={lang} next="about">
     {/* Shown above the ring: edit freely. */}
-    <nav class="title-row" aria-label="Main">
-      <a class="side left" href={url(left.href)}>{left.label}</a>
+    <nav class="title-row" aria-label={t(lang).mainMenu}>
+      <a class="side left" href={link(lang, left.href)}>{t(lang)[left.key]}</a>
       <h1 class="name">{SITE.name}</h1>
-      <a class="side right" href={url(right.href)}>{right.label}</a>
+      <a class="side right" href={link(lang, right.href)}>{t(lang)[right.key]}</a>
     </nav>
-    <p class="info">{SITE.tagline}</p>
+    <p class="info">{t(lang).tagline}</p>
   </PhotoRing>
 
   {/* Below the ring: reached by scrolling past it, or with the arrow on the ring's screen. */}
   <section id="about" class="about container" aria-labelledby="about-title">
     <div class="background">
-      <h2 id="about-title" class="eyebrow">About</h2>
-      {/* Placeholder: replace with your own background. */}
-      <p class="lead">
-        A few lines about you: where you grew up, how you came to photography, what you like to
-        photograph and where you're based now.
-      </p>
-      <p>
-        A second paragraph for anything else worth knowing: the cameras and film you use, places
-        you return to, exhibitions or publications.
-      </p>
+      <h2 id="about-title" class="eyebrow">{t(lang).about}</h2>
+      {/* Placeholder: replace with your own background, in each language. */}
+      {
+        lang === 'fr' ? (
+          <>
+            <p class="lead">
+              Quelques lignes sur vous : où vous avez grandi, comment vous êtes venu à la
+              photographie, ce que vous aimez photographier et où vous vivez aujourd'hui.
+            </p>
+            <p>
+              Un second paragraphe pour tout ce qui mérite d'être dit : les appareils et les
+              pellicules que vous utilisez, les lieux où vous revenez, vos expositions ou
+              publications.
+            </p>
+          </>
+        ) : (
+          <>
+            <p class="lead">
+              A few lines about you: where you grew up, how you came to photography, what you
+              like to photograph and where you're based now.
+            </p>
+            <p>
+              A second paragraph for anything else worth knowing: the cameras and film you use,
+              places you return to, exhibitions or publications.
+            </p>
+          </>
+        )
+      }
     </div>
     <div class="contact">
-      <h2 class="eyebrow">Contact</h2>
-      <p>For commissions, prints or just to say hello:</p>
+      <h2 class="eyebrow">{t(lang).contact}</h2>
+      <p>{t(lang).contactLead}</p>
       <ul>
         <li><a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>
         {

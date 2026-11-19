@@ -1,9 +1,13 @@
 ---
 # Draft: check the date, description and alt texts. The photos are shown in this order and
 # the first one is the gallery's cover. Any photo can also get a `caption:` line, shown under it.
-title: Norway
+title:
+  fr: Norvège
+  en: Norway
 date: 2026-08-01
-description: A summer on film in Norway, from mountain trails and seaside crowds to ferries and a red cabin by the sea.
+description:
+  fr: Un été en argentique en Norvège, des sentiers de montagne et de la foule au bord de l'eau jusqu'aux ferries et à une cabane rouge au bord de la mer.
+  en: A summer on film in Norway, from mountain trails and seaside crowds to ferries and a red cabin by the sea.
 tags: [travel, film]
 photos:
   - src: ./001021810008.jpg

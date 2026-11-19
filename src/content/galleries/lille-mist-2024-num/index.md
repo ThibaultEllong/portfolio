@@ -1,8 +1,12 @@
 ---
 # Draft: check the title, date (month unknown), description and alt texts.
-title: Lille in the Mist
+title:
+  fr: Lille dans la brume
+  en: Lille in the Mist
 date: 2024-06-01
-description: Lille at night in the fog, from the carousel lights to the empty station.
+description:
+  fr: Lille la nuit dans le brouillard, des lumières du manège à la gare déserte.
+  en: Lille at night in the fog, from the carousel lights to the empty station.
 tags: [street, digital]
 photos:
   - src: ./kid_full.jpg
