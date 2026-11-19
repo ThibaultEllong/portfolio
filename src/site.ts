@@ -1,8 +1,8 @@
 // Interface text in French and English is in src/i18n.ts.
 export const SITE = {
   name: 'Thibault Ellong',
-  email: 'hello@example.com',
-  social: [{ label: 'Instagram', href: 'https://www.instagram.com/' }],
+  email: 'thibaultellong59@gmail.com',
+  social: [{ label: 'Instagram', href: 'https://www.instagram.com/thibault_ellong' }],
 };
 
 // The main menu: labels from src/i18n.ts.
