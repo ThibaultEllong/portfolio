@@ -1,11 +1,11 @@
 ---
 # Draft: check the title, date (month unknown), description and alt texts.
-title: Calais
+title: Calais.
 date: 2026-06-01
 description:
-  fr: Un été autour de Calais en argentique, des stations-service et des vieux forts jusqu'aux falaises au-dessus de la mer.
-  en: A summer around Calais on film, from petrol stations and old forts to the cliffs above the sea.
-tags: [travel, film]
+  fr: Les chroniques d'une journée à arpenter les routes de Calais sous le soleil caniculaire d'été.
+  en: The chronicles of a day strolling along the roads of Calais under the heat from a suffocating summer sun.
+tags: [travel, film, france]
 photos:
   - src: ./000990810004.jpg
     alt: A black sports car parked at a small petrol station under a clear sky
