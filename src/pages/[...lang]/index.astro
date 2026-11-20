@@ -1,14 +1,17 @@
 ---
+import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PhotoRing from '../../components/PhotoRing.astro';
 import { NAV, SITE } from '../../site';
 import { langPaths, link, t, type Lang } from '../../i18n';
+import portrait from '../../assets/portrait.jpg';
 
 export const getStaticPaths = langPaths;
 
 const { lang } = Astro.props as { lang: Lang };
-// The site's menu (Work, About) frames the name here instead of sitting in the header.
-const [left, right] = NAV;
+// The site's menu frames the name here instead of sitting in the header: About on the left,
+// Work on the right.
+const [right, left] = NAV;
 ---
 
 <BaseLayout lang={lang}>
@@ -23,52 +26,59 @@ const [left, right] = NAV;
   </PhotoRing>
 
   {/* Below the ring: reached by scrolling past it, or with the arrow on the ring's screen. */}
-  <section id="about" class="about container" aria-labelledby="about-title">
-    <div class="background">
-      <h2 id="about-title" class="eyebrow">{t(lang).about}</h2>
-      {/* Placeholder: replace with your own background, in each language. */}
-      {
-        lang === 'fr' ? (
-          <>
-            <p class="lead">
-              Quelques lignes sur vous : où vous avez grandi, comment vous êtes venu à la
-              photographie, ce que vous aimez photographier et où vous vivez aujourd'hui.
-            </p>
-            <p>
-              Un second paragraphe pour tout ce qui mérite d'être dit : les appareils et les
-              pellicules que vous utilisez, les lieux où vous revenez, vos expositions ou
-              publications.
-            </p>
-          </>
-        ) : (
-          <>
-            <p class="lead">
-              A few lines about you: where you grew up, how you came to photography, what you
-              like to photograph and where you're based now.
-            </p>
-            <p>
-              A second paragraph for anything else worth knowing: the cameras and film you use,
-              places you return to, exhibitions or publications.
-            </p>
-          </>
-        )
-      }
-    </div>
-    <div class="contact">
-      <h2 class="eyebrow">{t(lang).contact}</h2>
-      <p>{t(lang).contactLead}</p>
-      <ul>
-        <li><a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>
-        {
-          SITE.social.map((link) => (
-            <li>
-              <a href={link.href} rel="me noopener" target="_blank">
-                {link.label}
-              </a>
-            </li>
-          ))
-        }
-      </ul>
+  <section id="about" class="about" aria-labelledby="about-title">
+    {/* The red ribbon behind the text; the screen above and below keeps the page color. */}
+    <div class="ribbon on-feature">
+      <div class="container about-inner">
+        <Image
+          class="portrait"
+          src={portrait}
+          alt={t(lang).portraitAlt}
+          widths={[480, 800, 1200]}
+          sizes="(min-width: 768px) 30rem, 22rem"
+        />
+        <div class="background">
+          <h2 id="about-title" class="eyebrow">{t(lang).about}</h2>
+          {/* Placeholder: replace with your own background, in each language. */}
+          {
+            lang === 'fr' ? (
+              <>
+                <p class="lead">
+                  Photographe basé à Lille, je travaille à l'argentique comme au numérique. Mon regard se porte tout aussi bien sur les scènes de nature et l'architecture que sur les événements sociétaux et les portraits.
+                </p>
+                <p>
+                  Mes appareils de prédilection sont l'Olympus OM-1 et le Contax TVS pour l'argentique, et le Sony a6700 pour la vidéo et photo numérique.
+                </p>
+              </>
+            ) : (
+              <>
+                <p class="lead">
+                  Photographer based in Lille, I work in both film and digital photography. My work explores nature and architecture as well as social issues and portraiture.
+                </p>
+                <p>
+                  My preferred cameras are the Olympus OM-1 and Contax TVS for film, and the Sony a6700 for digital photography and video.
+                </p>
+              </>
+            )
+          }
+        </div>
+        <div class="contact">
+          <h2 class="eyebrow">{t(lang).contact}</h2>
+          <p>{t(lang).contactLead}</p>
+          <ul>
+            <li><a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>
+            {
+              SITE.social.map((link) => (
+                <li>
+                  <a href={link.href} rel="me noopener" target="_blank">
+                    {link.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
     </div>
   </section>
 </BaseLayout>
@@ -153,17 +163,70 @@ const [left, right] = NAV;
   .about {
     display: grid;
     align-content: center;
-    gap: var(--space-6) var(--space-7);
     min-height: 100dvh;
     padding-block: var(--space-7) var(--space-6);
     scroll-snap-align: start;
   }
 
+  /* The full width of the screen, as tall as the text; the text keeps the site's column. The
+     portrait reaches past it, above and below. */
+  .ribbon {
+    --overhang: var(--space-6);
+    margin-block: var(--overhang);
+    padding-block: var(--space-6);
+  }
+
+  /* Phones: the portrait, then the text and the contact details. Wider screens: the portrait on
+     the left, the text and contact details beside it. */
+  .about-inner {
+    display: grid;
+    grid-template-areas: 'portrait' 'background' 'contact';
+    gap: var(--space-5) var(--space-7);
+  }
+
   @media (min-width: 768px) {
-    .about {
-      grid-template-columns: 3fr 2fr;
+    .about-inner {
+      grid-template-areas:
+        'portrait background'
+        'portrait contact';
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+      grid-template-rows: auto 1fr;
       align-items: start;
     }
+  }
+
+  /* The photo at its own upright shape. On phones it rises out of the ribbon's top. */
+  .portrait {
+    grid-area: portrait;
+    width: min(100%, 22rem);
+    height: auto;
+    max-height: 64dvh;
+    margin-top: calc(-1 * (var(--space-6) + var(--overhang)));
+    object-fit: cover;
+    box-shadow: 0 1.5rem 3rem -1rem var(--color-shadow);
+  }
+
+  /* On wider screens the ribbon is slimmer, and the portrait reaches out of both its edges (as
+     long as the text is shorter than the portrait; longer text makes the ribbon taller). */
+  @media (min-width: 768px) {
+    .ribbon {
+      padding-block: var(--space-5);
+    }
+
+    .portrait {
+      align-self: center;
+      width: min(100%, 30rem);
+      max-height: none;
+      margin-block: calc(-1 * (var(--space-5) + var(--overhang)));
+    }
+  }
+
+  .background {
+    grid-area: background;
+  }
+
+  .contact {
+    grid-area: contact;
   }
 
   .about h2 {
@@ -176,6 +239,13 @@ const [left, right] = NAV;
     gap: var(--space-3);
     max-width: 60ch;
     color: var(--color-text-muted);
+  }
+
+  /* Beside the portrait: a wider column keeps the text shorter than the portrait. */
+  @media (min-width: 768px) {
+    .background {
+      max-width: 44rem;
+    }
   }
 
   .background h2 {

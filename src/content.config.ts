@@ -32,8 +32,12 @@ const home = defineCollection({
             src: image(),
             title: text,
             alt: text,
-            location: text.optional(),
-            year: z.number().optional(),
+            // Either can be left empty.
+            location: text.nullish(),
+            // A year (2026), a month (2026-08) or a day (2026-10-17).
+            date: z
+              .union([z.number().int(), z.string().regex(/^\d{4}(-\d{2}){0,2}$/), z.date()])
+              .nullish(),
           }),
         )
         .min(1),

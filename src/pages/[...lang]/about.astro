@@ -6,6 +6,9 @@ import { langPaths, t, type Lang } from '../../i18n';
 export const getStaticPaths = langPaths;
 
 const { lang } = Astro.props as { lang: Lang };
+// Instagram, shown as its handle (the end of the link in src/site.ts): "@thibault_ellong".
+const instagram = SITE.social.find((link) => link.label === 'Instagram');
+const handle = instagram && `@${instagram.href.split('/').filter(Boolean).pop()}`;
 ---
 
 <BaseLayout lang={lang} title={t(lang).about} description={`${t(lang).about} — ${SITE.name}.`}>
@@ -16,13 +19,33 @@ const { lang } = Astro.props as { lang: Lang };
     {
       lang === 'fr' ? (
         <div class="bio">
-          <p>Une courte biographie : qui vous êtes, ce que vous photographiez et où vous vivez.</p>
-          <p>Pour une commande ou un tirage, écrivez à <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+          <p>Basé à Lille, je me spécialise dans la photographie de paysages, et je développe mes compétences pour la photo de portraits et le photo-journalisme.
+            Riche d'une expérience dans la vidéo et la 3D, j'explore plusieurs médiums avec le but de développer mon style propre: cinématique et contemplatif.
+          </p>
+          <p>
+            Pour une commande ou un tirage, écrivez à <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+            {instagram && (
+              <>
+                {' '}ou contactez-moi sur Instagram :{' '}
+                <a href={instagram.href} rel="me noopener" target="_blank">{handle}</a>
+              </>
+            )}.
+          </p>
         </div>
       ) : (
         <div class="bio">
-          <p>A short bio goes here: who you are, what you photograph, and where you're based.</p>
-          <p>For commissions and prints, write to <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+          <p>Based in Lille, I specialize in landscape photography and am developing my skills in portrait and photojournalism.
+            With experience in video and 3D, I explore multiple mediums with the goal of developing my own style: cinematic and contemplative.
+          </p>
+          <p>
+            For commissions and prints, write to <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+            {instagram && (
+              <>
+                {' '}or message me on Instagram:{' '}
+                <a href={instagram.href} rel="me noopener" target="_blank">{handle}</a>
+              </>
+            )}.
+          </p>
         </div>
       )
     }

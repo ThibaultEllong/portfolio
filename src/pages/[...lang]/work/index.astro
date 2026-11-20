@@ -118,7 +118,8 @@ const groups = await galleriesByMedium();
 
   .cards {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
-    gap: var(--space-5) var(--space-4);
+    /* About 15rem wide each; on phones, two side by side. */
+    grid-template-columns: repeat(auto-fill, minmax(min(40%, 15rem), 1fr));
+    gap: var(--space-4) var(--space-3);
   }
 </style>

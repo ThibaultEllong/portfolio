@@ -65,6 +65,15 @@ h3 {
   white-space: nowrap;
 }
 
+/* Deep red block with light text: everything inside uses the light colors. */
+.on-feature {
+  --color-text: var(--color-on-feature);
+  --color-text-muted: color-mix(in srgb, var(--color-on-feature) 72%, transparent);
+  --color-border: color-mix(in srgb, var(--color-on-feature) 28%, transparent);
+  background: var(--color-feature);
+  color: var(--color-text);
+}
+
 .eyebrow {
   font-size: var(--text-sm);
   letter-spacing: var(--tracking-wide);

@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets';
 import { getEntry } from 'astro:content';
 import { ENLARGE, ringPose } from '../lib/ring';
-import { pick, t, type Lang } from '../i18n';
+import { formatDate, pick, t, type Lang } from '../i18n';
 
 interface Props {
   lang: Lang;
@@ -74,9 +74,9 @@ const shapes = photos.map((_, i) => {
     <ul class="ring">
       {photos.map((data, i) => {
         const { x, y, scale, depth, z } = ringPose(i * step);
-        const meta = [data.location && pick(lang, data.location), data.year]
+        const meta = [data.location && pick(lang, data.location), data.date && formatDate(lang, data.date)]
           .filter(Boolean)
-          .join(', ');
+          .join(' · ');
         return (
           <li
             class="item"

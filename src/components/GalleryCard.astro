@@ -18,7 +18,7 @@ const cover = gallery.data.photos[0];
       src={cover.src}
       alt={pick(lang, cover.alt)}
       widths={[480, 800, 1200]}
-      sizes="(min-width: 1000px) 33vw, (min-width: 640px) 50vw, 100vw"
+      sizes="(min-width: 900px) 20vw, 50vw"
       transition:name={`cover-${gallery.id}`}
     />
     {/* Written over the cover, in white on a soft shade so it reads on any photo. */}
@@ -70,7 +70,7 @@ const cover = gallery.data.photos[0];
 
   h3 {
     font-family: var(--font-sans);
-    font-size: clamp(1.75rem, 1.1rem + 1.8vw, 2.75rem);
+    font-size: clamp(1.125rem, 0.8rem + 1vw, 1.75rem);
     font-weight: 500;
     letter-spacing: 0.01em;
   }

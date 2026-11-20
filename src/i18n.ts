@@ -12,7 +12,7 @@ const STRINGS = {
   fr: {
     tagline: 'Photographie',
     description: 'Portfolio photographique de Thibault Ellong.',
-    work: 'Travaux',
+    work: 'Galleries',
     about: 'À propos',
     contact: 'Contact',
     contactLead: 'Pour une commande, un tirage ou simplement dire bonjour :',
@@ -30,6 +30,7 @@ const STRINGS = {
     photo: 'Photo',
     photos: 'Photos',
     aboutAndContact: 'À propos et contact',
+    portraitAlt: "Thibault Ellong au bord d'une falaise sous un ciel d'orage, un appareil photo à l'épaule",
     darkMode: 'Mode sombre',
     language: 'Langue',
     media: { film: 'Argentique', digital: 'Numérique', other: 'Autre' },
@@ -44,7 +45,7 @@ const STRINGS = {
   en: {
     tagline: 'Photography',
     description: 'Photography portfolio of Thibault Ellong.',
-    work: 'Work',
+    work: 'Galleries',
     about: 'About',
     contact: 'Contact',
     contactLead: 'For commissions, prints or just to say hello:',
@@ -62,6 +63,7 @@ const STRINGS = {
     photo: 'Photo',
     photos: 'Photos',
     aboutAndContact: 'About and contact',
+    portraitAlt: 'Thibault Ellong on a clifftop under a stormy sky, with a camera on a strap',
     darkMode: 'Dark mode',
     language: 'Language',
     media: { film: 'Film', digital: 'Digital', other: 'Other' },
@@ -73,6 +75,20 @@ export const t = (lang: Lang) => STRINGS[lang];
 
 // A tag as written in the galleries (in English), in the page's language.
 export const tagLabel = (lang: Lang, tag: string) => STRINGS[lang].tags[tag.toLowerCase()] ?? tag;
+
+// A date written as a year, a month or a day (2026, 2026-08, 2026-10-17), in the page's
+// language: "2026", "août 2026", "17 octobre 2026".
+export const formatDate = (lang: Lang, value: number | string | Date) => {
+  const text = value instanceof Date ? value.toISOString().slice(0, 10) : String(value);
+  const [year, month, day] = text.split('-').map(Number);
+  if (!month) return String(year);
+  return new Intl.DateTimeFormat(lang, {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: 'long',
+    ...(day ? { day: 'numeric' } : {}),
+  }).format(new Date(Date.UTC(year, month - 1, day || 1)));
+};
 
 // Text in the content files can be written once for both languages, or once per language:
 //   title: Villa Cavrois

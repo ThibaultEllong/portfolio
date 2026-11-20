@@ -1,92 +1,156 @@
 # Photos shown in the home page ring. The ring shuffles them into a new random order on every
 # visit; this order is only used if JavaScript is off.
 # Each photo: the file, a title shown under the front photo, an alt text describing
-# the photo for screen readers, and an optional location and year. Any text can be the same
-# in French and English, or given in each language as { fr: ..., en: ... }, e.g.:
+# the photo for screen readers, and an optional location and date, shown under the title
+# (left empty, they show nothing). Any text can be the same in French and English, or given
+# in each language as { fr: ..., en: ... }; text with a comma goes in quotes. The date is a
+# year (2026), a month (2026-08) or a day (2026-10-17), shown as "2026", "août 2026" /
+# "August 2026", "17 octobre 2026". E.g.:
 #
 #   - src: ./my-photo.jpg
 #     title: { fr: Titre sous la photo, en: Title under the photo }
 #     alt: What the photo shows
-#     location: City, Country
-#     year: 2026
+#     location: { fr: Norvège, en: Norway }
+#     date: 2026-08
 
 photos:
   - src: ./000986830017.jpg
-    title: { fr: Cheval sur la plage, en: Horse on the beach }
+    title: { fr: "Le cavalier, le chiot et l'enfant", en: "The rider, the puppy and the child" }
     alt: A rider on a horse on a sandy beach, with a boy watching nearby
-
+    location: { fr: "Kribi, Cameroun", en: "Kribi, Cameroon" }
+    date: 2026-05
   - src: ./000997500019.jpg
     title: { fr: Bottes rouges, en: Red boots }
     alt: A woman in a cowboy hat and red boots sitting on a plastic chair in the grass
-
+    location: "Martizay, France"
+    date: 2026-05
   - src: ./001006840003.jpg
-    title: { fr: Piscine au jardin, en: Garden pool }
+    title: { fr: Piscine d'été, en: Summer pool }
     alt: A swimming pool in a sunlit garden surrounded by trees
-
+    location: { fr: "Sud de la France", en: "South of France" }
+    date: 2026-06
   - src: ./001021810008.jpg
-    title: { fr: Voiture rouge, en: Red car }
+    title: { fr: L'oubliée, en: The forgotten one }
     alt: An old red car parked in tall grass in front of a green wooden garage
-
-  - src: ./001021810019.jpg
-    title: { fr: Terrasse au bord de l'eau, en: Seaside terrace }
-    alt: A crowded terrace on the rocks by the sea, with mountains across the water
-
-  - src: ./001021810025.jpg
-    title: { fr: Pique-nique sur les rochers, en: Picnic on the rocks }
-    alt: A family sitting on rocks sharing food, one of them holding a baby
-
+    location: { fr: "Henningsvaer, Norvège", en: "Henningsvaer, Norway" }
+    date: 2026-07
   - src: ./001021820001.jpg
-    title: { fr: Crique cachée, en: Hidden cove }
+    title: { fr: Plage de Kvalvika, en: Kvalvika beach }
     alt: A turquoise bay below steep green mountains
-
+    location: { fr: "Îles Lofoten, Norvège", en: "Lofoten Islands, Norway" }
+    date: 2026-07
   - src: ./001021820010.jpg
     title: { fr: Lac de montagne, en: Mountain lake }
     alt: A lake in a green mountain valley seen from a rocky ridge
-
+    location: { fr: "Îles Lofoten, Norvège", en: "Lofoten Islands, Norway" }
+    date: 2026-07
   - src: ./001021820011.jpg
     title: { fr: Le sentier de descente, en: The trail down }
     alt: A path winding down a green ridge toward a mountain lake
-
-  - src: ./001021820017.jpg
-    title: { fr: Campement près du rocher, en: Camp by the rock }
-    alt: A tent and sheep beside a large boulder on a grassy headland
-
+    location: { fr: "Îles Lofoten, Norvège", en: "Lofoten Islands, Norway" }
+    date: 2026-07
   - src: ./001021820030.jpg
-    title: { fr: Route vers les montagnes, en: Road to the mountains }
+    title: { fr: Route entre les montagnes, en: Road between the mountains }
     alt: A road curving toward green mountains under scattered clouds
-
+    location: { fr: "Îles Lofoten, Norvège", en: "Lofoten Islands, Norway" }
+    date: 2026-07
   - src: ./001021830002.jpg
     title: { fr: Maison au lierre, en: Ivy house }
     alt: A house almost entirely covered in ivy under a blue sky
-
+    location: { fr: "Oslo, Norvège", en: "Oslo, Norway" }
+    date: 2026-07
   - src: ./001021830008.jpg
     title: { fr: Porte-drapeau, en: Flag bearer }
     alt: A child in a red football shirt on someone's shoulders under a waving Norwegian flag
-
+    location: { fr: "Oslo, Norvège", en: "Oslo, Norway" }
+    date: 2026-07
   - src: ./001021830009.jpg
-    title: { fr: Jour de match, en: Match day }
+    title: { fr: Le retour des héros, en: The heroes' return }
     alt: Children in red football shirts on adults' shoulders in a crowd, with a Norwegian flag behind
-
+    location: { fr: "Oslo, Norvège", en: "Oslo, Norway" }
+    date: 2026-07
   - src: ./001021830016.jpg
     title: { fr: Le ferry, en: The ferry }
     alt: A ferry passing behind a person standing on wet rocks by the sea
-
+    location: { fr: "Oslo, Norvège", en: "Oslo, Norway" }
+    date: 2026-07
   - src: ./001021830028.jpg
-    title: { fr: Cabane rouge, en: Red cabin }
+    title: { fr: La cabane rouge, en: The red cabin }
     alt: A small red cabin in a green meadow by the sea
-
+    location: { fr: "Îles Lofoten, Norvège", en: "Lofoten Islands, Norway" }
+    date: 2026-07
   - src: ./001059080028.jpg
-    title: { fr: Arbre dans la fumée, en: Tree in the smoke }
+    title: { fr: Air frais, en: Fresh air }
     alt: A young tree in a park, with smoke drifting through the trees behind it
-
+    location: "Lille, France"
+    date: 2026-10
   - src: ./001059100009.jpg
-    title: { fr: Fumée sur la place, en: Smoke on the square }
+    title: { fr: Témoignage, en: Testimony }
     alt: Silhouettes on a hazy city square in front of a tall belfry
-
+    location: "Lille, France"
+    date: 2026-10
   - src: ./001059100015.jpg
-    title: { fr: Après le feu, en: After the fire }
+    title: { fr: Face à face, en: Face to face }
     alt: A burnt bicycle on a sunlit city street, with a crowd in the distance
-
+    location: "Lille, France"
+    date: 2026-10
   - src: ./001059100034.jpg
-    title: { fr: Feu sur la place, en: Bonfire on the square }
+    title: { fr: Feu de joie, en: Bonfire }
     alt: People running past a fire on a cobbled city square
+    location: "Lille, France"
+    date: 2026-10
+  - src: ./DSC00615.jpg
+    title: { fr: JEEP, en: JEEP }
+    alt: A white car parked on a rocky plateau below a snow-dusted mountain lit by the sun
+    location: { fr: "Centre de la Norvège", en: "Central Norway" }
+    date: 2024-09
+  - src: ./DSC00682.jpg
+    title: { fr: Entre terre et mer, en: Between land and sea }
+    alt: A long beach seen from a grassy clifftop, waves curling onto the sand and a lone walker
+    location: { fr: "Normandie, France", en: "Normandy, France" }
+    date: 2025-07
+  - src: ./DSC00717.jpg
+    title: { fr: Lueur du matin, en: Morning glow }
+    alt: A calm lake between dark mountains, the sun setting in the gap between them
+    location: { fr: "Centre de la Norvège", en: "Central Norway" }
+    date: 2024-09
+  - src: ./DSC00726.jpg
+    title: { fr: Lumière sur le lac, en: Light on the lake }
+    alt: Bright sun behind a snowy mountain above shimmering water, a small island in the distance
+    location: { fr: "Centre de la Norvège", en: "Central Norway" }
+    date: 2024-09
+  - src: ./DSC00735.jpg
+    title: { fr: Etretat, en: Etretat }
+    alt: A seagull flying above white chalk cliffs, with a sea arch and a needle of rock
+    location: { fr: "Normandie, France", en: "Normandy, France" }
+    date: 2025-07
+  - src: ./DSC01124.jpg
+    title: { fr: Mouvement, en: Movement }
+    alt: A silhouetted figure in a hat shaking out a sheet of fabric against the setting sun
+    location: { fr: "Normandie, France", en: "Normandy, France" }
+    date: 2025-07
+  - src: ./DSC01188.jpg
+    title: { fr: Coucher de soleil, en: Sunset }
+    alt: A figure in a hat and long coat holding up a green canvas against the low sun
+    location: { fr: "Normandie, France", en: "Normandy, France" }
+    date: 2025-07
+  - src: ./DSC03574.jpg
+    title: { fr: La soif, en: Thirst }
+    alt: A gloved hand holding out a paper cup to bare hands warming over a fire
+    location: { fr: "Londres, Royaume-Uni", en: "London, United Kingdom" }
+    date: 2026-02
+  - src: ./bench-2.jpg
+    title: { fr: Banc de la villa, en: The villa bench }
+    alt: A long black bench along a curved yellow wall below a narrow window
+    location: "Villa Cavrois, France"
+    date: 2025-02
+  - src: ./chairs.jpg
+    title: { fr: Fauteuils verts, en: Green armchairs }
+    alt: Green armchairs with wooden legs on a rug striped with red, in the sun
+    location: "Villa Cavrois, France"
+    date: 2025-02
+  - src: ./opera_mist_3x2.jpg
+    title: { fr: Opéra dans la brume, en: Opera in the mist }
+    alt: People walking down a street at night toward a lit building in the mist
+    location: "Lille, France"
+    date: 2025-12
